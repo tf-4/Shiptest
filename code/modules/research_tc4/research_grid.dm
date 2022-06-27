@@ -86,7 +86,6 @@
 	if(completed)
 		return
 
-	world.log << "Handling button: [x]|[y]"
 	if(!discovered[x][y])
 		var/can_afford = TRUE // todo: consume research points
 		if(!can_afford)
