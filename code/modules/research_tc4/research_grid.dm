@@ -235,7 +235,6 @@
 		if(used[t_x][t_y])
 			continue
 
-		var/found_loc = __loc(t_x, t_y)
 		var/found = grid[t_x][t_y]
 		if(found == GRID_SOCK(_type["theory"]))
 			// found a socket, mark us and them as used
