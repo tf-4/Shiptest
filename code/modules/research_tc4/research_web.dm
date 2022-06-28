@@ -12,6 +12,7 @@
 	nodes_not_researched = new
 	nodes_can_research = new
 	nodes_can_not_research = new
+	init_node_lists()
 
 /datum/research_web/proc/init_node_lists()
 	for(var/datum/research_node/node as anything in nodes_researched)
@@ -29,6 +30,7 @@
 			continue
 		nodes_not_researched.Add(new node_type(src))
 
+/// Try not to call this, its incredibly costly
 /datum/research_web/proc/calculate_node_requisites()
 	nodes_can_research.Cut()
 	nodes_can_not_research.Cut()
@@ -37,6 +39,8 @@
 		nodes_can_not_research.Add(researched)
 
 	for(var/datum/research_node/not_researched as anything in nodes_not_researched)
+		CHECK_TICK
+
 		var/exclusive = FALSE
 		for(var/datum/research_node/recursive in nodes_researched)
 			if(recursive == not_researched)
@@ -92,6 +96,8 @@
 	nodes_not_researched.Remove(researched)
 
 	for(var/datum/research_node/not_researched as anything in nodes_not_researched)
+		CHECK_TICK // this likely wont cause any tick issues, but I'd rather be safe than sorry
+
 		if(researched.node_id in not_researched.exclusive_nodes)
 			nodes_can_research.Remove(not_researched)
 			nodes_can_not_research.Add(not_researched)
