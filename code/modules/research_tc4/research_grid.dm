@@ -116,13 +116,13 @@
 			if(grid_completed())
 				handle_completion()
 		if("l")
-		var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_REMOVE)
+			var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_REMOVE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to remove line!</span>")
 				return
 			grid[x][y] = null
 		if("e")
-		var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_CREATE)
+			var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_CREATE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to create line!</span>")
 				return

@@ -7,12 +7,19 @@
 	var/list/datum/research_node/nodes_can_research
 	var/list/datum/research_node/nodes_can_not_research
 
-/datum/research_web/New()
+	var/ruin = FALSE
+	var/obj/machinery/research_server/parent
+
+/datum/research_web/New(obj/machinery/research_server/parent)
+	src.parent = parent
+	ruin = parent.is_ruin
 	nodes_researched = new
 	nodes_not_researched = new
 	nodes_can_research = new
 	nodes_can_not_research = new
 	init_node_lists()
+	if(ruin)
+		do_ruin_unlocks()
 
 /datum/research_web/proc/init_node_lists()
 	for(var/datum/research_node/node as anything in nodes_researched)
@@ -32,6 +39,9 @@
 
 /// Try not to call this, its incredibly costly
 /datum/research_web/proc/calculate_node_requisites()
+	if(ruin)
+		return
+
 	nodes_can_research.Cut()
 	nodes_can_not_research.Cut()
 
@@ -65,6 +75,9 @@
 	nodes_can_not_research -= node
 
 /datum/research_web/proc/use_points(_type, amount, allow_partial=FALSE)
+	if(ruin)
+		return
+
 	if(!(_type in points_list))
 		return FALSE
 	if(points_list[_type] < amount)
@@ -77,6 +90,9 @@
 	return .
 
 /datum/research_web/proc/add_points(_type, amount, force=FALSE)
+	if(ruin)
+		return
+
 	if(!(_type in points_max))
 		if(!force)
 			return FALSE
@@ -95,6 +111,9 @@
 	nodes_researched.Add(researched)
 	nodes_not_researched.Remove(researched)
 
+	if(ruin)
+		return
+
 	for(var/datum/research_node/not_researched as anything in nodes_not_researched)
 		CHECK_TICK // this likely wont cause any tick issues, but I'd rather be safe than sorry
 
@@ -109,3 +128,34 @@
 				nodes_can_research.Add(not_researched)
 				nodes_can_not_research.Remove(not_researched)
 			continue
+
+/datum/research_web/proc/do_ruin_unlocks()
+	if(!ruin)
+		return
+
+	var/list/prob_hit = new
+	for(var/node_entry in parent.ruin_node_list)
+		var/prob = parent.ruin_node_list[node_entry]
+		if(prob(prob))
+			prob_hit[node_entry] = prob
+
+	var/prob_spawned = 0
+	while(length(prob_hit) && prob_spawned < parent.ruin_node_max)
+		var/lowest_key
+		var/lowest_prob
+		for(var/entry in prob_hit)
+			if(prob_hit[entry] < lowest_prob)
+				lowest_prob = prob_hit[entry]
+				lowest_key = entry
+		prob_hit -= lowest_key
+
+		var/found = FALSE
+		for(var/datum/research_node/node as anything in nodes_not_researched)
+			if(node.node_id == lowest_key)
+				found = node
+				break
+		if(found)
+			handle_node_research_completion(found)
+			prob_spawned += 1
+		else
+			message_admins("attempted to force complete node for a ruin, but the given ID doesnt exist! --> '[lowest_key]'")
