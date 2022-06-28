@@ -26,8 +26,10 @@
 	var/list/loc_sock
 
 	var/completed
+	var/mob/user
+	var/user_original_key
 
-/datum/research_grid/New(node, width = null, height = null)
+/datum/research_grid/New(node, mob/user, width = null, height = null)
 	. = ..()
 	src.node = node
 	grid_width = width || grid_width
@@ -42,14 +44,31 @@
 			message_admins("[src] failed to initialize grid with optimistic values, non-recoverable.")
 			addtimer(CALLBACK(.proc/qdel_self), 0)
 			return
+	RegisterSignal(user, COMSIG_MOB_CLIENT_LOGIN, .proc/refresh)
+	RegisterSignal(user, COMSIG_PARENT_QDELETING, .proc/qdel_self)
 
-/datum/research_grid/ui_interact(mob/user)
+/datum/research_grid/Destroy(force, ...)
+	. = ..()
+	UnregisterSignal(user, COMSIG_MOB_CLIENT_LOGIN)
+	UnregisterSignal(user, COMSIG_PARENT_QDELETING)
+	node.grids -= src
+	node = null
+	user = null
+
+/datum/research_grid/refresh()
+	if(!user_original_key)
+		user_original_key = user.key
+	else
+		if(user.key != user_original_key)
+			qdel(src)
+			return
+
 	var/list/dat = list()
 	dat += "<table>"
 	for(var/y in 1 to grid_height)
 		for(var/x in 1 to grid_width)
 			var/click_func = "onClick=\"location.href='?src=[REF(src)];grid_button=[x]x[y]'\""
-			dat += "<button [click_func]>[get_button_contents(x, y, user)]</button>"
+			dat += "<button [click_func]>[get_button_contents(x, y)]</button>"
 		dat += "<br/>"
 	dat += "</table>"
 	var/datum/browser/popup = new(user, "rgrid", name, 400, 400)
@@ -59,7 +78,7 @@
 /datum/research_grid/proc/__get_icon(state)
 	return mutable_appearance('grid_items.dmi', state)
 
-/datum/research_grid/proc/get_button_contents(x, y, mob/user)
+/datum/research_grid/proc/get_button_contents(x, y)
 	var/_type = __loc2type(__loc(x, y))
 	var/mutable_appearance/base
 	if(!completed && !discovered[x][y])
@@ -120,20 +139,13 @@
 /datum/research_grid/proc/handle_completion()
 	to_chat(usr, "<span class='notice'>Research Grid finalized!</span>")
 	completed = TRUE
-	//todo: node.on_research_completion()
+	node.handle_completion()
 
 /datum/research_grid/Topic(href, list/href_list)
 	if(href_list["grid_button"])
 		var/list/loc = __text2loc(replacetext(href_list["grid_button"], "x", ";"))
 		handle_button(arglist(loc))
 		return
-
-/datum/research_grid/Destroy(force, ...)
-	. = ..()
-	node = null
-	grid.Cut()
-	loc_plug.Cut()
-	loc_sock.Cut()
 
 #define INIT_PLUG 1
 #define INIT_SOCKET 2
