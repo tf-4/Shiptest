@@ -44,7 +44,7 @@
 	node = null
 	user = null
 
-/datum/research_grid/refresh()
+/datum/research_grid/proc/refresh()
 	if(!user_original_key)
 		user_original_key = user.key
 	else
