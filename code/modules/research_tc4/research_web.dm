@@ -135,9 +135,9 @@
 
 	var/list/prob_hit = new
 	for(var/node_entry in parent.ruin_node_list)
-		var/prob = parent.ruin_node_list[node_entry]
-		if(prob(prob))
-			prob_hit[node_entry] = prob
+		var/entry_prob = parent.ruin_node_list[node_entry]
+		if(prob(entry_prob))
+			prob_hit[node_entry] = entry_prob
 
 	var/prob_spawned = 0
 	while(length(prob_hit) && prob_spawned < parent.ruin_node_max)
