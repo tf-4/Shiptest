@@ -2,17 +2,6 @@
 #define GRID_SOCK(_type) "g_[_type]_s"
 #define GRID_LINE(_type) "g_[_type]_l"
 
-/mob
-	var/datum/research_grid/grid
-
-/mob/verb/test_grid()
-	var/datum/research_node/tnode = new
-	tnode.theories_required = list(
-		THEORY_BASIC = 2
-	)
-	grid = new(tnode)
-	grid.ui_interact(src)
-
 /datum/research_grid
 	var/name = "Research Grid"
 	var/datum/research_node/node
@@ -105,8 +94,9 @@
 	if(completed)
 		return
 
+	var/_type = __loc2type(__loc(x, y))
 	if(!discovered[x][y])
-		var/can_afford = TRUE // todo: consume research points
+		var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_DISCOVER)
 		if(!can_afford)
 			to_chat(usr, "<span class='warning'>Not enough research points to reveal tile!</span>")
 			return
@@ -115,21 +105,24 @@
 		ui_interact(usr) // update the window state
 		return
 
-	var/_type = __loc2type(__loc(x, y))
 	switch(_type["grid"])
 		if("s")
 			// do nothing
 		if("p")
+			var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_COMPLETE)
+			if(!can_afford)
+				to_chat(usr, "<span class='warning'>Not enough research points to attempt completion!</span>")
+				return
 			if(grid_completed())
 				handle_completion()
 		if("l")
-			var/can_afford = TRUE // todo: see above
+		var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_REMOVE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to remove line!</span>")
 				return
 			grid[x][y] = null
 		if("e")
-			var/can_afford = TRUE // todo: see above
+		var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_CREATE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to create line!</span>")
 				return
