@@ -1,14 +1,9 @@
 /datum/research_node
-	var/abstract = /datum/research_node
-
 	var/name = "Default Node"
 	var/node_id = "default"
-
+	var/category = RESEARCH_CATEGORY_DEPT_ENGINEERING
+	var/node_hidden = FALSE
 	var/node_base_cost = 50
-
-	var/datum/research_web/parent
-
-	var/list/datum/research_grid/grids
 
 	var/list/theories_required = list(
 		THEORY_BASIC = 1,
@@ -22,6 +17,11 @@
 
 	var/list/requisite_nodes = list()
 	var/list/exclusive_nodes = list()
+
+	// internal stuff
+	var/datum/research_web/parent
+	var/abstract = /datum/research_node
+	var/list/datum/research_grid/grids
 
 /datum/research_node/New(parent)
 	src.parent = parent
@@ -40,6 +40,9 @@
 	for(var/grid in grids)
 		qdel(grid)
 	grids.Cut()
+
+/datum/research_node/proc/handle_other_completion(datum/research_node/other_node)
+	return
 
 /datum/research_node/proc/create_grid(mob/user)
 	if(length(grids))

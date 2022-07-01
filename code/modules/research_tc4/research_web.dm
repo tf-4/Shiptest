@@ -1,25 +1,38 @@
 /datum/research_web
-	var/list/points_list
-	var/list/points_max
+	var/list/datum/theory_holder/points
 
 	var/list/datum/research_node/nodes_researched
 	var/list/datum/research_node/nodes_not_researched
 	var/list/datum/research_node/nodes_can_research
 	var/list/datum/research_node/nodes_can_not_research
 
+	// these are here to prevent machinery from having to iterate through the internal node lists
+	var/list/unlocked_surgeries
+	var/list/unlocked_fabrications
+
 	var/ruin = FALSE
 	var/obj/machinery/research_server/parent
 
 /datum/research_web/New(obj/machinery/research_server/parent)
 	src.parent = parent
+	points = new
 	ruin = parent.is_ruin
 	nodes_researched = new
 	nodes_not_researched = new
 	nodes_can_research = new
 	nodes_can_not_research = new
+	unlocked_surgeries = new
+	unlocked_fabrications = new
 	init_node_lists()
 	if(ruin)
 		do_ruin_unlocks()
+
+/datum/research_web/Destroy(force, ...)
+	QDEL_LIST(nodes_researched)
+	QDEL_LIST(nodes_not_researched)
+	QDEL_LIST(points)
+	parent = null
+	return ..()
 
 /datum/research_web/proc/init_node_lists()
 	for(var/datum/research_node/node as anything in nodes_researched)
@@ -78,31 +91,19 @@
 	if(ruin)
 		return
 
-	if(!(_type in points_list))
+	if(!(_type in points))
 		return FALSE
-	if(points_list[_type] < amount)
-		. = allow_partial ? round(points_list[_type]) : 0
-	else
-		. = amount
-
-	if(.)
-		points_list[_type] -= .
-	return .
+	var/datum/theory_holder/holder = points[_type]
+	return holder.use_points(amount, allow_partial)
 
 /datum/research_web/proc/add_points(_type, amount, force=FALSE)
 	if(ruin)
 		return
 
-	if(!(_type in points_max))
-		if(!force)
-			return FALSE
-		points_list[_type] += amount
-		return amount
-
-	. = points_max[_type] - points_list[_type]
-	. = min(., amount)
-	points_list[_type] += .
-	return .
+	if(!(_type in points))
+		points[_type] = new /datum/theory_holder(_type)
+	var/datum/theory_holder/holder = points[_type]
+	return holder.add_points(amount, force)
 
 /datum/research_web/proc/handle_node_research_completion(datum/research_node/researched)
 	ASSERT(researched in nodes_not_researched)
@@ -113,6 +114,11 @@
 
 	if(ruin)
 		return
+
+	for(var/datum/research_node/other as anything in (nodes_not_researched | nodes_researched))
+		if(other == researched)
+			continue
+		other.handle_other_completion(researched)
 
 	for(var/datum/research_node/not_researched as anything in nodes_not_researched)
 		CHECK_TICK // this likely wont cause any tick issues, but I'd rather be safe than sorry
@@ -128,6 +134,35 @@
 				nodes_can_research.Add(not_researched)
 				nodes_can_not_research.Remove(not_researched)
 			continue
+
+/datum/research_web/proc/__filter_hidden(list/nodes)
+	. = nodes.Copy()
+	for(var/datum/research_node/node as anything in nodes)
+		if(node.node_hidden)
+			. -= node
+
+/datum/research_web/proc/__filter_dept(list/nodes, dept)
+	. = list()
+	for(var/datum/research_node/node as anything in nodes)
+		if(node.category == dept)
+			. += node
+
+/datum/research_web/proc/get_visible_nodes(category, ignore_hidden=FALSE)
+	if(ruin)
+		return nodes_researched
+	switch(category)
+		if(RESEARCH_CATEGORY_NOT_RESEARCHED)
+			. = nodes_not_researched
+		if(RESEARCH_CATEGORY_RESEARCHED)
+			. = nodes_researched
+		if(RESEARCH_CATEGORY_CAN_RESEARCH)
+			. = nodes_can_research
+		if(RESEARCH_CATEGORY_CAN_NOT_RESEARCH)
+			. = nodes_can_not_research
+		else
+			. = __filter_dept(nodes_can_research, category)
+	if(!ignore_hidden)
+		. = __filter_hidden(.)
 
 /datum/research_web/proc/do_ruin_unlocks()
 	if(!ruin)

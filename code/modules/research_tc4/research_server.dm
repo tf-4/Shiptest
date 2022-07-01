@@ -15,6 +15,6 @@
 	web = new(src)
 
 /obj/machinery/research_server/multitool_act(mob/living/user, obj/item/multitool/multi)
-	multi.buffer = src
-	to_chat(user, "<span class='notice'>You store [src] into the buffer on [multi].</span>")
+	multi.buffer = web
+	to_chat(user, "<span class='notice'>You store the research web of [src] into the buffer on [multi].</span>")
 	return COMPONENT_BLOCK_TOOL_ATTACK
