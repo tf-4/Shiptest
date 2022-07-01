@@ -36,6 +36,8 @@
 	var/max_slimes = 5
 	var/monkeys = 0
 
+	var/datum/research_web/stored_research
+
 	icon_screen = "slime_comp"
 	icon_keyboard = "rd_key"
 
@@ -57,6 +59,7 @@
 			connected_recycler.connected += src
 
 /obj/machinery/computer/camera_advanced/xenobio/Destroy()
+	stored_research = null
 	QDEL_NULL(current_potion)
 	for(var/thing in stored_slimes)
 		var/mob/living/simple_animal/slime/S = thing
@@ -171,7 +174,7 @@
 		return
 	else if(istype(O, /obj/item/slime_extract))
 		var/obj/item/slime_extract/E = O
-		if(!SSresearch.slime_already_researched[E.type])
+		if(!stored_research.slime_already_researched[E.type])
 			if(!E.research)
 				playsound(src, 'sound/machines/buzz-sigh.ogg', 50, 3, -1)
 				visible_message("<span class='notice'>[src] buzzes and displays a message: Invalid extract! (You shouldn't be seeing this. If you are, tell someone.)</span>")
@@ -184,7 +187,7 @@
 				playsound(src, 'sound/machines/ping.ogg', 50, 3, -1)
 				visible_message("<span class='notice'>You insert [E] into a slot on the [src]. It pings and prints out some research notes worth [E.research] points!</span>")
 				new /obj/item/research_notes(drop_location(), E.research, "xenobiology")
-				SSresearch.slime_already_researched[E.type] = TRUE
+				stored_research.slime_already_researched[E.type] = TRUE
 				qdel(O)
 				return
 		else

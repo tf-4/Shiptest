@@ -4,32 +4,77 @@
 	var/list/datum/research_node/nodes_researched
 	var/list/datum/research_node/nodes_not_researched
 	var/list/datum/research_node/nodes_can_research
+	var/list/datum/research_node/nodes_hidden
 	var/list/datum/research_node/nodes_can_not_research
 
 	// these are here to prevent machinery from having to iterate through the internal node lists
-	var/list/unlocked_surgeries
-	var/list/unlocked_fabrications
+	var/static/list/all_designs
+	var/static/list/all_mutations // so this is apparentally just a fucking list of types, why on god
+
+	var/list/datum/surgery/unlocked_designs
+	var/list/datum/mutation/unlocked_mutations
+	var/list/slime_already_researched
+
+	var/largest_bomb_value
+	var/old_tech_largest_bomb_value
+
+	var/list/consoles_accessing
 
 	var/ruin = FALSE
-	var/obj/machinery/research_server/parent
+	var/admin = FALSE
+	var/obj/machinery/parent
 
-/datum/research_web/New(obj/machinery/research_server/parent)
+/datum/research_web/integrated
+	ruin = TRUE
+
+/datum/research_web/integrated/New(obj/machinery/parent, buildtypes)
+	. = ..(parent)
+	if(!buildtypes)
+		return
+	if(!islist(buildtypes))
+		buildtypes = list(buildtypes)
+	for(var/datum/design/design as anything in all_designs)
+		design = all_designs[design]
+		if(!(design.build_type in buildtypes))
+			continue
+		unlocked_designs[design.id] = design
+
+/datum/research_web/admin
+	admin = TRUE
+
+/datum/research_web/New(obj/machinery/parent)
+	if(!all_designs)
+		all_designs = list()
+		all_mutations = list()
+		for(var/datum/design/dtype as anything in subtypesof(/datum/design))
+			if(initial(dtype.id) == DESIGN_ID_IGNORE)
+				continue
+			all_designs[initial(dtype.id)] = new dtype
+		for(var/mutation in subtypesof(/datum/mutation))
+			all_mutations += mutation
 	src.parent = parent
+	slime_already_researched = new
 	points = new
-	ruin = parent.is_ruin
+	ruin = ruin || (("is_ruin" in parent.vars) ? parent:is_ruin : FALSE) // unsafe var access, but we check for the var existing first
 	nodes_researched = new
 	nodes_not_researched = new
 	nodes_can_research = new
 	nodes_can_not_research = new
-	unlocked_surgeries = new
-	unlocked_fabrications = new
+	nodes_hidden = new
+	unlocked_designs = new
+	unlocked_mutations = new
+	consoles_accessing = new
 	init_node_lists()
 	if(ruin)
 		do_ruin_unlocks()
 
 /datum/research_web/Destroy(force, ...)
+	nodes_hidden.Cut()
 	QDEL_LIST(nodes_researched)
 	QDEL_LIST(nodes_not_researched)
+	unlocked_designs.Cut()
+	slime_already_researched.Cut()
+	consoles_accessing.Cut()
 	QDEL_LIST(points)
 	parent = null
 	return ..()
@@ -48,15 +93,33 @@
 	for(var/datum/research_node/node_type as anything in subtypesof(/datum/research_node))
 		if(initial(node_type.abstract) == node_type)
 			continue
-		nodes_not_researched.Add(new node_type(src))
+		if(admin)
+			nodes_researched.Add(new node_type(src))
+		else
+			nodes_not_researched.Add(new node_type(src))
+
+	calculate_node_requisites()
+
+	if(admin)
+		recalculate_unlocked_designs()
 
 /// Try not to call this, its incredibly costly
 /datum/research_web/proc/calculate_node_requisites()
-	if(ruin)
+	if(ruin || admin)
 		return
 
 	nodes_can_research.Cut()
 	nodes_can_not_research.Cut()
+
+	for(var/datum/research_node/node as anything in (nodes_researched | nodes_not_researched))
+		node.unlock_nodes.Cut()
+	
+	for(var/datum/research_node/node as anything in (nodes_researched | nodes_not_researched))
+		CHECK_TICK
+
+		for(var/datum/research_node/req_node as anything in node.requisite_nodes)
+			req_node = node_by_id(req_node)
+			req_node.unlock_nodes |= node.node_id
 
 	for(var/datum/research_node/researched as anything in nodes_researched)
 		nodes_can_not_research.Add(researched)
@@ -79,7 +142,10 @@
 		if(length(not_researched.requisite_nodes) || exclusive)
 			nodes_can_not_research.Add(not_researched)
 		else
-			nodes_can_research.Add(not_researched)
+			if(not_researched.node_hidden)
+				nodes_hidden.Add(not_researched)
+			else
+				nodes_can_research.Add(not_researched)
 
 /datum/research_web/proc/node_del(node)
 	nodes_researched -= node
@@ -87,9 +153,23 @@
 	nodes_can_research -= node
 	nodes_can_not_research -= node
 
+/datum/research_web/proc/node_by_id(id)
+	for(var/datum/research_node/node as anything in (nodes_not_researched | nodes_researched))
+		if(node.node_id == id)
+			return node
+
+/datum/research_web/proc/add_points_from_note(obj/item/research_notes/note)
+	return //TODO
+
+/datum/research_web/proc/create_point_information_header()
+	return "IF YOU SEE THIS ZEPHYR IS AN IDIOT" // TODO
+
 /datum/research_web/proc/use_points(_type, amount, allow_partial=FALSE)
 	if(ruin)
 		return
+
+	if(admin)
+		return amount
 
 	if(!(_type in points))
 		return FALSE
@@ -97,7 +177,7 @@
 	return holder.use_points(amount, allow_partial)
 
 /datum/research_web/proc/add_points(_type, amount, force=FALSE)
-	if(ruin)
+	if(ruin || admin)
 		return
 
 	if(!(_type in points))
@@ -105,12 +185,21 @@
 	var/datum/theory_holder/holder = points[_type]
 	return holder.add_points(amount, force)
 
+/datum/research_web/proc/recalculate_unlocked_designs()
+	unlocked_designs.Cut()
+	for(var/datum/research_node/node as anything in nodes_researched)
+		for(var/design in node.designs)
+			unlocked_designs[design] = all_designs[design]
+
 /datum/research_web/proc/handle_node_research_completion(datum/research_node/researched)
 	ASSERT(researched in nodes_not_researched)
 	ASSERT(researched in nodes_can_research)
 
 	nodes_researched.Add(researched)
 	nodes_not_researched.Remove(researched)
+
+	for(var/design in researched.designs)
+		unlocked_designs[design] = all_designs[design]
 
 	if(ruin)
 		return
@@ -164,11 +253,18 @@
 	if(!ignore_hidden)
 		. = __filter_hidden(.)
 
+/datum/research_web/proc/get_designs(category)
+	. = list()
+	for(var/datum/design/design as anything in unlocked_designs)
+		if(category in design.category)
+			. += design
+
 /datum/research_web/proc/do_ruin_unlocks()
-	if(!ruin)
+	if(!ruin || !("ruin_node_list" in src.parent.vars))
 		return
 
 	var/list/prob_hit = new
+	var/obj/machinery/research_server/parent = src.parent // the var we want exists, pretend its a research server even though we dont know for certain
 	for(var/node_entry in parent.ruin_node_list)
 		var/entry_prob = parent.ruin_node_list[node_entry]
 		if(prob(entry_prob))

@@ -7,8 +7,8 @@ SUBSYSTEM_DEF(research)
 	//TECHWEB STATIC
 	var/list/techweb_nodes = list()				//associative id = node datum
 	var/list/techweb_designs = list()			//associative id = node datum
-	var/list/datum/techweb/techwebs = list()
-	var/datum/techweb/admin/admin_tech
+	var/list/datum/research_web/techwebs = list()
+	var/datum/research_web/admin/admin_tech
 	var/datum/techweb_node/error_node/error_node	//These two are what you get if a node/design is deleted and somehow still stored in a console.
 	var/datum/design/error_design/error_design
 
@@ -35,7 +35,7 @@ SUBSYSTEM_DEF(research)
 	point_types = TECHWEB_POINT_TYPE_LIST_ASSOCIATIVE_NAMES
 	initialize_all_techweb_designs()
 	initialize_all_techweb_nodes()
-	admin_tech = new /datum/techweb/admin
+	admin_tech = new /datum/research_web/admin
 	autosort_categories()
 	error_design = new
 	error_node = new
@@ -68,7 +68,7 @@ SUBSYSTEM_DEF(research)
 		var/datum/techweb_node/TN = techwebs[i]
 		TN.on_design_deletion(TN)
 	for(var/i in techwebs)
-		var/datum/techweb/T = i
+		var/datum/research_web/T = i
 		T.recalculate_nodes(TRUE)
 
 /datum/controller/subsystem/research/proc/on_node_deletion(datum/techweb_node/TN)
@@ -76,7 +76,7 @@ SUBSYSTEM_DEF(research)
 		var/datum/techweb_node/TN2 = techwebs[i]
 		TN2.on_node_deletion(TN)
 	for(var/i in techwebs)
-		var/datum/techweb/T = i
+		var/datum/research_web/T = i
 		T.recalculate_nodes(TRUE)
 
 /datum/controller/subsystem/research/proc/initialize_all_techweb_nodes(clearall = FALSE)

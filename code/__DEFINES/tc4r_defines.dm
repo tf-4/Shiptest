@@ -27,3 +27,7 @@
 #define RESEARCH_CATEGORY_DEPT_SECURITY "Security"
 #define RESEARCH_CATEGORY_DEPT_SERVICE "Service"
 #define RESEARCH_CATEGORY_DEPT_CARGO "Cargo"
+
+// point types
+#define RESEARCH_POINT_TYPE_ENGINEERING "Engineering"
+#define RESEARCH_POINT_TYPE_SCIENCE "Science"

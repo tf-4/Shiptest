@@ -1,9 +1,11 @@
 /datum/research_node
 	var/name = "Default Node"
+	var/description = "Default Node"
 	var/node_id = "default"
 	var/category = RESEARCH_CATEGORY_DEPT_ENGINEERING
 	var/node_hidden = FALSE
 	var/node_base_cost = 50
+	var/list/designs
 
 	var/list/theories_required = list(
 		THEORY_BASIC = 1,
@@ -17,6 +19,8 @@
 
 	var/list/requisite_nodes = list()
 	var/list/exclusive_nodes = list()
+
+	var/list/unlock_nodes = list()
 
 	// internal stuff
 	var/datum/research_web/parent

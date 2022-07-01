@@ -143,12 +143,13 @@
 	flick("chamber_flash",src)
 	update_icon_state()
 	banked_cash = 0
-	if((gauss_real >= gauss_major) && (SSresearch.techweb_nodes_experimental.len > 0)) //Major Success.
-		say("Experiment concluded with major success. New technology node discovered on technology disc.")
-		new /obj/item/disk/tech_disk/major(dropturf,1)
-		if(SSresearch.techweb_nodes_experimental.len == 0)
-			say("Expended all available experimental technology nodes. Resorting to minor rewards.")
-		return
+	// TODO: BEPIS SHIT
+	// if((gauss_real >= gauss_major) && (SSresearch.techweb_nodes_experimental.len > 0)) //Major Success.
+	// 	say("Experiment concluded with major success. New technology node discovered on technology disc.")
+	// 	new /obj/item/disk/tech_disk/major(dropturf,1)
+	// 	if(SSresearch.techweb_nodes_experimental.len == 0)
+	// 		say("Expended all available experimental technology nodes. Resorting to minor rewards.")
+	// 	return
 	if(gauss_real >= gauss_minor) //Minor Success.
 		var/reward = pick(minor_rewards)
 		new reward(dropturf)
