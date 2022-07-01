@@ -2,8 +2,10 @@
 	var/name = "Default Node"
 	var/description = "Default Node"
 	var/node_id = "default"
+	var/starting_node = FALSE
 	var/category = RESEARCH_CATEGORY_DEPT_ENGINEERING
 	var/node_hidden = FALSE
+	var/node_experimental = FALSE
 	var/node_base_cost = 50
 	var/list/designs
 

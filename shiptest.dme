@@ -3067,6 +3067,7 @@
 #include "code\modules\research_tc4\research_server.dm"
 #include "code\modules\research_tc4\research_web.dm"
 #include "code\modules\research_tc4\theory_holder.dm"
+#include "code\modules\research_tc4\nodes\all_nodes_old.dm"
 #include "code\modules\research_tc4\nodes\research_node.dm"
 #include "code\modules\ruins\lavaland_ruin_code.dm"
 #include "code\modules\ruins\rockplanet_ruin_code.dm"

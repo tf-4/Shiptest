@@ -96,7 +96,10 @@
 		if(admin)
 			nodes_researched.Add(new node_type(src))
 		else
-			nodes_not_researched.Add(new node_type(src))
+			if(initial(node_type.starting_node))
+				nodes_researched.Add(new node_type(src))
+			else
+				nodes_not_researched.Add(new node_type(src))
 
 	calculate_node_requisites()
 
