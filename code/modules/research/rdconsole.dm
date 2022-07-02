@@ -194,6 +194,7 @@ Nothing else in the console has ID requirements.
 		return FALSE
 
 	// TODO: CHARGE UPFRONT PRICE AND START RESEARCH GRID FOR USER
+	TN.handle_completion()
 
 	say("Not enough research points...")
 	return FALSE

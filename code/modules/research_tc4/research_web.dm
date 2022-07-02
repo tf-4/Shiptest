@@ -116,7 +116,7 @@
 
 	for(var/datum/research_node/node as anything in (nodes_researched | nodes_not_researched))
 		node.unlock_nodes.Cut()
-	
+
 	for(var/datum/research_node/node as anything in (nodes_researched | nodes_not_researched))
 		CHECK_TICK
 
