@@ -432,12 +432,15 @@
 /obj/machinery/autolathe/proc/adjust_hacked(state)
 	hacked = state
 	for(var/datum/design/design as anything in stored_research.all_designs)
-		design = stored_research.unlocked_designs[design]
-		if((design.build_type & AUTOLATHE) && ("hacked" in design.category))
-			if(hacked)
-				stored_research.unlocked_designs[design.id] = design
-			else
-				stored_research.unlocked_designs -= design.id
+		design = stored_research.all_designs[design]
+		if(!("hacked" in design.category))
+			continue
+		if(!(design.build_type & AUTOLATHE))
+			continue
+		if(hacked)
+			stored_research.unlocked_designs[design.id] = design
+		else
+			stored_research.unlocked_designs -= design.id
 
 /obj/machinery/autolathe/hacked/Initialize()
 	. = ..()
