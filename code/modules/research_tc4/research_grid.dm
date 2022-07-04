@@ -10,6 +10,7 @@
 	var/grid_height = 5
 	var/list/grid
 	var/list/discovered
+	var/list/last_check
 
 	var/list/loc_plug
 	var/list/loc_sock
@@ -17,9 +18,12 @@
 	var/completed
 	var/list/mob/users
 
+	var/selected_type
+
 /datum/research_grid/New(node, width = null, height = null)
 	. = ..()
 	src.node = node
+	name = "[initial(name)] ([src.node.name])"
 	users = list()
 	grid_width = width || grid_width
 	grid_height = height || grid_height
@@ -74,7 +78,8 @@
 			dat += "<button [click_func]>[get_button_contents(x, y)]</button>"
 		dat += "<br/>"
 	dat += "</table>"
-	var/datum/browser/popup = new(target, "rgrid", name, 400, 400)
+	dat += "<br />"
+	var/datum/browser/popup = new(target, "rgrid", name, grid_width * 100, grid_height * 100)
 	popup.set_content(dat.Join())
 	popup.open()
 
@@ -86,11 +91,11 @@
 	UnregisterSignal(target, list(COMSIG_MOB_CLIENT_LOGIN, COMSIG_MOB_LOGOUT))
 
 /datum/research_grid/proc/__get_icon(state)
-	return mutable_appearance('grid_items.dmi', state)
+	return icon('grid_items.dmi', state)
 
 /datum/research_grid/proc/get_button_contents(x, y)
 	var/_type = __loc2type(__loc(x, y))
-	var/mutable_appearance/base
+	var/icon/base
 	if(!completed && !discovered[x][y])
 		base = __get_icon("unknown")
 	else
@@ -105,6 +110,13 @@
 				base = __get_icon("empty")
 			else
 				CRASH("unknown grid type? [_type["grid"]]")
+	if(last_check)
+		if(last_check[x][y])
+			base.Blend(rgb(0, 255, 0), ICON_ADD)
+		else
+			base.Blend(rgb(255, 0, 0), ICON_ADD)
+	if(selected_type && (_type["theory"] == selected_type))
+		base.Blend(rgb(0, 0, 125), ICON_ADD)
 	return icon2html(base, usr)
 
 /datum/research_grid/proc/handle_button(x, y)
@@ -128,7 +140,8 @@
 
 	switch(_type["grid"])
 		if("s")
-			// do nothing
+			selected_type = _type["theory"]
+			to_chat(usr, "<span class='notice'>Selected type is now: '[selected_type]'.</span>")
 		if("p")
 			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_COMPLETE)
 			if(!can_afford)
@@ -136,6 +149,7 @@
 				return
 			if(grid_completed())
 				handle_completion()
+				return // handle completion refreshes for us
 		if("l")
 			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_LINE_REMOVE)
 			if(!can_afford)
@@ -147,13 +161,17 @@
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to create line!</span>")
 				return
-			grid[x][y] = GRID_LINE(_type["theory"])
+			if(!selected_type)
+				to_chat(usr, "<span class='warning'>No socket type selected!</span>")
+				return
+			grid[x][y] = GRID_LINE(selected_type)
 	refresh()
 
 /datum/research_grid/proc/handle_completion()
 	to_chat(usr, "<span class='notice'>Research Grid finalized!</span>")
 	completed = TRUE
 	node.handle_completion()
+	refresh()
 
 /datum/research_grid/Topic(href, list/href_list)
 	if(href_list["grid_button"])
@@ -228,10 +246,10 @@
 	return list("theory" = split[2], "grid" = split[3])
 
 /datum/research_grid/proc/grid_completed()
-	var/list/used = create_empty_grid()
+	last_check = create_empty_grid()
 	for(var/loctext in loc_plug)
 		var/loc = __text2loc(loctext)
-		if(!check_connection(loc, used))
+		if(!check_connection(loc, last_check))
 			return FALSE
 	return TRUE
 
