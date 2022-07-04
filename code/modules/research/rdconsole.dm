@@ -184,19 +184,26 @@ Nothing else in the console has ID requirements.
 		if (d_disk)
 			. += "<span class='notice'>[d_disk.name] is loaded, Alt-Click to remove.</span>"
 
+/client/verb/debug_rnd()
+	var/turf/t = get_turf(mob)
+	var/obj/machinery/research_server/serv = new(t)
+	for(var/pt in RESEARCH_POINT_TYPE_ALL)
+		serv.web.add_points(pt, 50000, TRUE)
+	var/obj/machinery/computer/rdconsole/comp = new(t)
+	comp.stored_research = serv.web
+	comp.ui_interact(mob)
+
 /obj/machinery/computer/rdconsole/proc/research_node(id, mob/user)
-	if(!stored_research.nodes_can_research[id] || stored_research.nodes_researched[id])
-		say("Node unlock failed: Either already researched or not available!")
-		return FALSE
-	var/datum/research_node/TN = stored_research.nodes_not_researched[id]
-	if(!istype(TN))
-		say("Node interface failed: Unknown error.")
+	var/datum/research_node/node = stored_research.node_by_id(id)
+	if(!node)
+		say("Node Interface Failure: unexpected response from database server!")
 		return FALSE
 
-	// TODO: CHARGE UPFRONT PRICE AND START RESEARCH GRID FOR USER
-	TN.handle_completion()
+	if(!(node in stored_research.nodes_can_research))
+		say("Node Interface Failure: illegal node state inside database!")
+		return FALSE
 
-	say("Not enough research points...")
+	node.create_grid(user)
 	return FALSE
 
 /obj/machinery/computer/rdconsole/on_deconstruction()
@@ -609,7 +616,8 @@ Nothing else in the console has ID requirements.
 	l += "<h2>Technology Nodes:</h2>[RDSCREEN_NOBREAK]"
 	l += "<div><h3>Available for Research:</h3>"
 	for(var/datum/research_node/N in avail)
-		var/research_href = "<A href='?src=[REF(src)];research_node=[N.node_id]'>Research</A>"
+		var/in_progress_text = length(N.grid?.users) ? "Resume" : "Start"
+		var/research_href = "<A href='?src=[REF(src)];research_node=[N.node_id]'>[in_progress_text] Research</A>"
 		l += "<A href='?src=[REF(src)];view_node=[N.node_id];back_screen=[screen]'>[N.name]</A>[research_href]"
 	l += "</div><div><h3>Locked Nodes:</h3>"
 	for(var/datum/research_node/N in unavail)
@@ -639,7 +647,8 @@ Nothing else in the console has ID requirements.
 			l += "<span class='linkOff'>Researched</span>"
 		else
 			if(node in stored_research.nodes_can_research)
-				l += "<BR><A href='?src=[REF(src)];research_node=[node.node_id]'>Start Research</A>"
+				var/in_progress_text = length(node.grid?.users) ? "Resume" : "Start"
+				l += "<BR><A href='?src=[REF(src)];research_node=[node.node_id]'>[in_progress_text] Research</A>"
 			else
 				l += "<BR><span class='linkOff bad'>Start Research</span>"  // red - missing prereqs
 		if(ui_mode == RDCONSOLE_UI_MODE_NORMAL)
@@ -901,8 +910,6 @@ Nothing else in the console has ID requirements.
 	if(ls["research_node"])
 		if(!research_control)
 			return				//honestly should call them out for href exploiting :^)
-		if(!stored_research.nodes_not_researched[ls["research_node"]])
-			return			//Nope!
 		research_node(ls["research_node"], usr)
 	if(ls["clear_tech"]) //Erase la on the technology disk.
 		if(QDELETED(t_disk))
