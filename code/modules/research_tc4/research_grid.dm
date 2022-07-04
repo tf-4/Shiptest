@@ -123,7 +123,7 @@
 			return
 
 		discovered[x][y] = TRUE
-		ui_interact(usr) // update the window state
+		refresh()
 		return
 
 	switch(_type["grid"])
