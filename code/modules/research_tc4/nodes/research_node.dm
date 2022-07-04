@@ -28,9 +28,8 @@
 
 /datum/research_node/proc/handle_completion()
 	grid.completed = TRUE
-	grid.refresh()
-
 	parent.handle_node_research_completion(src)
+	grid.refresh()
 
 /datum/research_node/Destroy(force, ...)
 	. = ..()
