@@ -15,12 +15,12 @@
 	var/list/loc_sock
 
 	var/completed
-	var/mob/user
-	var/user_original_key
+	var/list/mob/users
 
-/datum/research_grid/New(node, mob/user, width = null, height = null)
+/datum/research_grid/New(node, width = null, height = null)
 	. = ..()
 	src.node = node
+	users = list()
 	grid_width = width || grid_width
 	grid_height = height || grid_height
 	if(grid_width < 5 || grid_height < 5)
@@ -32,26 +32,40 @@
 		if(!grid_init())
 			message_admins("[src] failed to initialize grid with optimistic values, non-recoverable.")
 			addtimer(CALLBACK(.proc/qdel_self), 0)
-			return
-	RegisterSignal(user, COMSIG_MOB_CLIENT_LOGIN, .proc/refresh)
-	RegisterSignal(user, COMSIG_PARENT_QDELETING, .proc/qdel_self)
 
 /datum/research_grid/Destroy(force, ...)
 	. = ..()
-	UnregisterSignal(user, COMSIG_MOB_CLIENT_LOGIN)
-	UnregisterSignal(user, COMSIG_PARENT_QDELETING)
-	node.grids -= src
 	node = null
-	user = null
+	for(var/user in users)
+		user_logout(user)
+	users.Cut()
+
+/datum/research_grid/proc/add_user(mob/user)
+	if(QDELETED(src))
+		return
+
+	if(!(user in users))
+		RegisterSignal(user, COMSIG_MOB_CLIENT_LOGIN, .proc/user_login)
+		RegisterSignal(user, COMSIG_MOB_LOGOUT, .proc/user_logout)
+	user_refresh(user)
+
+/datum/research_grid/proc/user_login(mob/target)
+	SIGNAL_HANDLER
+
+	INVOKE_ASYNC(src, .proc/user_refresh, target)
 
 /datum/research_grid/proc/refresh()
-	if(!user_original_key)
-		user_original_key = user.key
-	else
-		if(user.key != user_original_key)
-			qdel(src)
-			return
+	if(QDELETED(src))
+		return
 
+	for(var/user in users)
+		user_refresh(user)
+
+/datum/research_grid/proc/user_refresh(mob/target)
+	if(QDELETED(src))
+		return
+
+	users |= target
 	var/list/dat = list()
 	dat += "<table>"
 	for(var/y in 1 to grid_height)
@@ -60,9 +74,16 @@
 			dat += "<button [click_func]>[get_button_contents(x, y)]</button>"
 		dat += "<br/>"
 	dat += "</table>"
-	var/datum/browser/popup = new(user, "rgrid", name, 400, 400)
+	var/datum/browser/popup = new(target, "rgrid", name, 400, 400)
 	popup.set_content(dat.Join())
 	popup.open()
+
+/datum/research_grid/proc/user_logout(mob/target)
+	SIGNAL_HANDLER
+
+	users -= target
+	target << browse(null, "window=rgrid")
+	UnregisterSignal(target, list(COMSIG_MOB_CLIENT_LOGIN, COMSIG_MOB_LOGOUT))
 
 /datum/research_grid/proc/__get_icon(state)
 	return mutable_appearance('grid_items.dmi', state)
@@ -84,7 +105,7 @@
 				base = __get_icon("empty")
 			else
 				CRASH("unknown grid type? [_type["grid"]]")
-	return icon2html(base, user)
+	return icon2html(base, usr)
 
 /datum/research_grid/proc/handle_button(x, y)
 	if(istext(x))
@@ -96,7 +117,7 @@
 
 	var/_type = __loc2type(__loc(x, y))
 	if(!discovered[x][y])
-		var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_DISCOVER)
+		var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_DISCOVER)
 		if(!can_afford)
 			to_chat(usr, "<span class='warning'>Not enough research points to reveal tile!</span>")
 			return
@@ -109,25 +130,25 @@
 		if("s")
 			// do nothing
 		if("p")
-			var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_COMPLETE)
+			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_COMPLETE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to attempt completion!</span>")
 				return
 			if(grid_completed())
 				handle_completion()
 		if("l")
-			var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_REMOVE)
+			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_LINE_REMOVE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to remove line!</span>")
 				return
 			grid[x][y] = null
 		if("e")
-			var/can_afford = node.parent.use_points(_type["theory"], node.node_base_cost * GRID_COST_LINE_CREATE)
+			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_LINE_CREATE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to create line!</span>")
 				return
 			grid[x][y] = GRID_LINE(_type["theory"])
-	ui_interact(usr)
+	refresh()
 
 /datum/research_grid/proc/handle_completion()
 	to_chat(usr, "<span class='notice'>Research Grid finalized!</span>")
