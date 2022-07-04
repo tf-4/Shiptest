@@ -101,19 +101,14 @@
 			else
 				nodes_not_researched.Add(new node_type(src))
 
+	calculate_node_unlocks()
 	calculate_node_requisites()
 
 	if(admin)
 		recalculate_unlocked_designs()
 
-/// Try not to call this, its incredibly costly
-/datum/research_web/proc/calculate_node_requisites()
-	if(ruin || admin)
-		return
-
-	nodes_can_research.Cut()
-	nodes_can_not_research.Cut()
-
+/// This does not check for circular dependencies; because I don't know a way to do that without being recursively recursive
+/datum/research_web/proc/calculate_node_unlocks()
 	for(var/datum/research_node/node as anything in (nodes_researched | nodes_not_researched))
 		node.unlock_nodes.Cut()
 
@@ -124,12 +119,18 @@
 			req_node = node_by_id(req_node)
 			req_node.unlock_nodes |= node.node_id
 
+/// Try not to call this, its incredibly costly
+/datum/research_web/proc/calculate_node_requisites()
+	if(ruin || admin)
+		return
+
+	nodes_can_research.Cut()
+	nodes_can_not_research.Cut()
+
 	for(var/datum/research_node/researched as anything in nodes_researched)
 		nodes_can_not_research.Add(researched)
 
 	for(var/datum/research_node/not_researched as anything in nodes_not_researched)
-		CHECK_TICK
-
 		var/exclusive = FALSE
 		for(var/datum/research_node/recursive in nodes_researched)
 			if(recursive == not_researched)
@@ -165,7 +166,13 @@
 	return //TODO
 
 /datum/research_web/proc/create_point_information_header()
-	return "IF YOU SEE THIS ZEPHYR IS AN IDIOT" // TODO
+	var/list/dat = list("<div id='rnd-points'>")
+	for(var/datum/theory_holder/pnt_holder as anything in points)
+		dat += "<p>[pnt_holder]: "
+		pnt_holder = points[pnt_holder]
+		dat += "[pnt_holder.points](/[pnt_holder.points_max])"
+	dat += "</div>"
+	return dat.Join()
 
 /datum/research_web/proc/use_points(_type, amount, allow_partial=FALSE)
 	if(ruin)
@@ -211,21 +218,12 @@
 		if(other == researched)
 			continue
 		other.handle_other_completion(researched)
+	
+	calculate_node_requisites()
 
-	for(var/datum/research_node/not_researched as anything in nodes_not_researched)
-		CHECK_TICK // this likely wont cause any tick issues, but I'd rather be safe than sorry
-
-		if(researched.node_id in not_researched.exclusive_nodes)
-			nodes_can_research.Remove(not_researched)
-			nodes_can_not_research.Add(not_researched)
-			continue
-
-		if(researched.node_id in not_researched.requisite_nodes)
-			not_researched.requisite_nodes -= researched.node_id
-			if(!length(not_researched.requisite_nodes))
-				nodes_can_research.Add(not_researched)
-				nodes_can_not_research.Remove(not_researched)
-			continue
+	for(var/obj/machinery/console as anything in consoles_accessing)
+		console.say("Research Complete: [researched.name]")
+		console.updateDialog()
 
 /datum/research_web/proc/__filter_hidden(list/nodes)
 	. = nodes.Copy()
