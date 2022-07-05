@@ -98,14 +98,8 @@
 	var/icon/base = __get_icon("base")
 
 	if(!completed && !discovered[x][y])
-		base.Insert(__get_icon("unknown"))
+		base.Blend(__get_icon("unknown"), ICON_OVERLAY)
 		return icon2html(base, usr)
-
-	if(last_check)
-		if(last_check[x][y])
-			base.Blend(rgb(0, 255, 0), ICON_ADD)
-		else
-			base.Blend(rgb(255, 0, 0), ICON_ADD)
 
 	var/icon/overlay
 	switch(_type["grid"])
@@ -120,9 +114,18 @@
 		else
 			CRASH("unknown grid type? [_type["grid"]]")
 
+	if(completed)
+		base.Blend(rgb(0, 255, 0), ICON_ADD)
+	else
+		if(last_check)
+			if(last_check[x][y])
+				base.Blend(rgb(0, 255, 0), ICON_ADD)
+			else
+				base.Blend(rgb(255, 0, 0), ICON_ADD)
+
 	if(selected_type && selected_type == _type["theory"])
 		overlay.Blend(rgb(0, 0, 255), ICON_ADD)
-	base.Insert(overlay)
+	base.Blend(overlay, ICON_OVERLAY)
 
 	return icon2html(base, usr)
 
