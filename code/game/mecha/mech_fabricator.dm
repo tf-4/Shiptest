@@ -217,12 +217,12 @@
 	return
 
 /obj/machinery/mecha_part_fabricator/proc/add_part_set_to_queue(set_name)
-	if(set_name in part_sets)
-		for(var/datum/design/design as anything in stored_research.unlocked_designs)
-			design = stored_research.unlocked_designs[design]
-			if(design.build_type & MECHFAB)
-				if(set_name in design.category)
-					add_to_queue(design)
+	if(!(set_name in parts_set))
+		CRASH("attempted to add set to queue that doesnt exist!")
+	for(var/datum/design/design as anything in stored_research.unlocked_designs)
+		design = stored_research.unlocked_designs[design]
+		if((design.build_type & MECHFAB) && (set_name in design.category))
+			add_to_queue(design)
 
 /obj/machinery/mecha_part_fabricator/proc/add_to_queue(D)
 	if(!istype(queue))
@@ -362,21 +362,19 @@
 		var/T = href_list["part"]
 		for(var/datum/design/design as anything in stored_research.unlocked_designs)
 			design = stored_research.unlocked_designs[design]
-			if(design.build_type & MECHFAB)
-				if(design.id == T)
-					if(!processing_queue)
-						build_part(design)
-					else
-						add_to_queue(design)
-					break
+			if((design.build_type & MECHFAB) && design.id == T)
+				if(!processing_queue)
+					build_part(design)
+				else
+					add_to_queue(design)
+				break
 	if(href_list["add_to_queue"])
 		var/T = href_list["add_to_queue"]
 		for(var/datum/design/design as anything in stored_research.unlocked_designs)
 			design = stored_research.unlocked_designs[design]
-			if(design.build_type & MECHFAB)
-				if(design.id == T)
-					add_to_queue(design)
-					break
+			if((design.build_type & MECHFAB) && design.id == T)
+				add_to_queue(design)
+				break
 		return update_queue_on_page()
 	if(href_list["remove_from_queue"])
 		remove_from_queue(text2num(href_list["remove_from_queue"]))
@@ -406,14 +404,13 @@
 		var/T = href_list["part_desc"]
 		for(var/datum/design/design as anything in stored_research.unlocked_designs)
 			design = stored_research.unlocked_designs[design]
-			if(design.build_type & MECHFAB)
-				if(design.id == T)
-					var/obj/part = design.build_path
-					temp = {"<h1>[initial(part.name)] description:</h1>
-								[initial(part.desc)]<br>
-								<a href='?src=[REF(src)];clear_temp=1'>Return</a>
-								"}
-					break
+			if((design.build_type & MECHFAB) && design.id == T)
+				var/obj/part = design.build_path
+				temp = {"<h1>[initial(part.name)] description:</h1>
+						[initial(part.desc)]<br>
+						<a href='?src=[REF(src)];clear_temp=1'>Return</a>
+						"}
+				break
 	if(href_list["search"]) //Search for designs with name matching pattern
 		search(href_list["to_search"])
 		screen = "search"

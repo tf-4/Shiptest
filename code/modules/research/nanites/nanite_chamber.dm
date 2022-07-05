@@ -196,7 +196,7 @@
 		var/obj/item/multitool/multi = I
 		if(istype(multi.buffer, /datum/research_web))
 			linked_techweb = multi.buffer
-			say("linked to server")
+			visible_message("linked to server")
 
 	if(!occupant && default_deconstruction_screwdriver(user, icon_state, icon_state, I))//sent icon_state is irrelevant...
 		update_icon()//..since we're updating the icon here, since the scanner can be unpowered when opened/closed
