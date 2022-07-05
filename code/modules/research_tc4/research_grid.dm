@@ -44,14 +44,14 @@
 		user_logout(user)
 	users.Cut()
 
-/datum/research_grid/proc/add_user(mob/user)
+/datum/research_grid/proc/add_user(mob/user, obj/machinery/from)
 	if(QDELETED(src))
 		return
 
 	if(!(user in users))
 		RegisterSignal(user, COMSIG_MOB_CLIENT_LOGIN, .proc/user_login)
 		RegisterSignal(user, COMSIG_MOB_LOGOUT, .proc/user_logout)
-	user_refresh(user)
+	user_refresh(user, from)
 
 /datum/research_grid/proc/user_login(mob/target)
 	SIGNAL_HANDLER
@@ -65,11 +65,13 @@
 	for(var/user in users)
 		user_refresh(user)
 
-/datum/research_grid/proc/user_refresh(mob/target)
+/datum/research_grid/proc/user_refresh(mob/target, obj/machinery/from=null)
 	if(QDELETED(src))
 		return
 
-	users |= target
+	from = from || users[target]
+	users[target] = from
+
 	var/list/dat = list()
 	dat += "<table>"
 	for(var/y in 1 to grid_height)
@@ -178,10 +180,14 @@
 	refresh()
 
 /datum/research_grid/proc/handle_completion()
-	to_chat(usr, "<span class='notice'>Research Grid finalized!</span>")
+	for(var/mob/user as anything in users)
+		to_chat(user, "<span class='notice'>Research Grid finalized!</span>")
 	completed = TRUE
 	node.handle_completion()
 	refresh()
+	for(var/mob/user as anything in users)
+		var/obj/machinery/user_src = users[user]
+		user_src?.ui_interact(user)
 
 /datum/research_grid/Topic(href, list/href_list)
 	if(href_list["grid_button"])

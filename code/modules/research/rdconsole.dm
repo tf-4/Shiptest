@@ -203,7 +203,7 @@ Nothing else in the console has ID requirements.
 		say("Node Interface Failure: illegal node state inside database!")
 		return FALSE
 
-	node.create_grid(user)
+	node.create_grid(user, src)
 	return FALSE
 
 /obj/machinery/computer/rdconsole/on_deconstruction()

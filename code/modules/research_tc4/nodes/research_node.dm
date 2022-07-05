@@ -40,10 +40,10 @@
 /datum/research_node/proc/handle_other_completion(datum/research_node/other_node)
 	return
 
-/datum/research_node/proc/create_grid(mob/user)
+/datum/research_node/proc/create_grid(mob/user, obj/machinery/from)
 	if(!grid)
 		var/theory_total = length(theories_required)
 		var/expected_size = max((theory_total * 2) + 1, 5) // 1-2: 5x5, 3: 7x7, 4: 9x9, etc; might need a better formula for this because it will get large FAST
 		grid = new(src, expected_size, expected_size)
-	grid.add_user(user)
+	grid.add_user(user, from)
 	return TRUE
