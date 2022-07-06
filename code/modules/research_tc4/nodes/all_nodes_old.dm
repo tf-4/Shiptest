@@ -3,7 +3,7 @@
 	node_id = "engineering"
 	name = "Industrial Engineering"
 	description = "A refresher course on modern engineering technology."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_engineering")
 	designs = list("solarcontrol", "solarassembly", "recharger", "powermonitor", "rped", "pacman", "adv_capacitor", "adv_scanning", "emitter", "high_cell", "adv_matter_bin", "scanner_gate",
 	"atmosalerts", "atmos_control", "recycler", "autolathe", "high_micro_laser", "nano_mani", "mesons", "welding_goggles", "thermomachine", "rad_collector", "tesla_coil", "grounding_rod",
 	"apc_control", "cell_charger", "power control", "airlock_board", "firelock_board", "aac_electronics", "airalarm_electronics", "firealarm_electronics", "cell_charger", "stack_console", "stack_machine",
@@ -38,11 +38,10 @@
 	designs = list("smes", "super_cell", "hyper_cell", "super_capacitor", "superpacman", "mrspacman", "power_turbine", "power_turbine_console", "power_compressor", "circulator", "teg")
 
 /////////////////////////Bluespace tech/////////////////////////
-/datum/research_node/bluespace_basic //Bluespace-memery
+/datum/research_node/starter/bluespace_basic
 	node_id = "bluespace_basic"
 	name = "Basic Bluespace Theory"
 	description = "Basic studies into the mysterious alternate dimension known as bluespace."
-	requisite_nodes = list("base")
 	designs = list("beacon", "xenobioconsole", "telesci_gps", "bluespace_crystal")
 
 /datum/research_node/bluespace_travel
@@ -84,7 +83,7 @@
 	node_id = "regulated_bluespace"
 	name = "Regulated Bluespace Research"
 	description = "Bluespace technology using stable and balanced procedures. Required by galactic convention for public use."
-	requisite_nodes = list("base")
+	requisite_nodes = list("bluespace_basic")
 	designs = list()
 
 /datum/research_node/unregulated_bluespace
@@ -115,7 +114,7 @@
 	node_id = "robotics"
 	name = "Basic Robotics Research"
 	description = "Programmable machines that make our lives lazier."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic")
 	designs = list("paicard")
 
 /datum/research_node/adv_robotics
@@ -166,7 +165,7 @@
 	node_id = "emp_basic"
 	name = "Electromagnetic Theory"
 	description = "Study into usage of frequencies in the electromagnetic spectrum."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_parts")
 	designs = list("holosign", "holosignsec", "holosignengi", "holosignatmos", "inducer", "tray_goggles", "holopad")
 
 /datum/research_node/emp_adv
@@ -188,7 +187,7 @@
 	node_id = "clown"
 	name = "Clown Technology"
 	description = "Honk?!"
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_sec") // your own worst enemy
 	designs = list("air_horn", "honker_main", "honker_peri", "honker_targ", "honk_chassis", "honk_head", "honk_torso", "honk_left_arm", "honk_right_arm",
 	"honk_left_leg", "honk_right_leg", "mech_banana_mortar", "mech_mousetrap_mortar", "mech_honker", "mech_punching_face", "implant_trombone", "borg_transform_clown")
 
@@ -300,7 +299,7 @@
 	name = "Basic Security Equipment"
 	description = "Standard equipment used by security."
 	designs = list("seclite", "pepperspray", "bola_energy", "zipties", "evidencebag")
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_sec")
 
 /datum/research_node/rcd_upgrade
 	node_id = "rcd_upgrade"
@@ -413,7 +412,7 @@
 	node_id = "mecha_odysseus"
 	name = "EXOSUIT: Odysseus"
 	description = "Odysseus exosuit designs"
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_medical")
 	designs = list("odysseus_chassis", "odysseus_torso", "odysseus_head", "odysseus_left_arm", "odysseus_right_arm" ,"odysseus_left_leg", "odysseus_right_leg",
 	"odysseus_main", "odysseus_peri")
 
@@ -674,7 +673,7 @@
 	node_id = "spacepod_basic"
 	name = "Spacepod Construction"
 	description = "Basic stuff to construct Spacepods. Don't crash your first spacepod into the sun, especially while going more than 10 m/s."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_parts")
 	designs = list("podcore", "podarmor_civ", "podarmor_dark", "spacepod_main")
 
 /datum/research_node/spacepod_lock
@@ -792,7 +791,7 @@
 	node_id = "light_apps"
 	name = "Illumination Applications"
 	description = "Applications of lighting and vision technology not originally thought to be commercially viable."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_parts")
 	designs = list("bright_helmet", "rld_mini")
 	node_hidden = TRUE
 	node_experimental = TRUE
@@ -801,7 +800,7 @@
 	node_id = "rolling_table"
 	name = "Advanced Wheel Applications"
 	description = "Adding wheels to things can lead to extremely beneficial outcomes."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_parts")
 	designs = list("rolling_table")
 	node_hidden = TRUE
 	node_experimental = TRUE
@@ -810,7 +809,7 @@
 	node_id = "mauna_mug"
 	name = "Mauna Mug"
 	description = "A bored scientist was thinking to himself for very long...and then realized his coffee got cold! He made this invention to solve this extreme problem."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_parts")
 	designs = list("mauna_mug")
 	node_hidden = TRUE
 	node_experimental = TRUE
@@ -819,7 +818,7 @@
 	node_id = "spec_eng"
 	name = "Specialized Engineering"
 	description = "Conventional wisdom has deemed these engineering products 'technically' safe, but far too dangerous to traditionally condone."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_parts")
 	designs = list("lava_rods", "eng_gloves")
 	node_hidden = TRUE
 	node_experimental = TRUE
@@ -828,7 +827,7 @@
 	node_id = "aus_security"
 	name = "Australicus Security Protocols"
 	description = "It is said that security in the Australicus sector is tight, so we took some pointers from their equipment. Thankfully, our sector lacks any signs of these, 'dropbears'."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_sec")
 	designs = list("stun_boomerang")
 
 	node_hidden = TRUE
@@ -839,7 +838,7 @@
 	name = "Enhanced Interrogation Technology"
 	description = "By cross-referencing several declassified documents from past dictatorial regimes, we were able to develop an incredibly effective interrogation device. \
 	Ethical concerns about loss of free will do not apply to criminals, according to galactic law."
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_sec")
 	designs = list("hypnochair")
 
 	node_hidden = TRUE
