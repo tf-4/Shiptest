@@ -217,7 +217,7 @@
 	return
 
 /obj/machinery/mecha_part_fabricator/proc/add_part_set_to_queue(set_name)
-	if(!(set_name in parts_set))
+	if(!(set_name in part_sets))
 		CRASH("attempted to add set to queue that doesnt exist!")
 	for(var/datum/design/design as anything in stored_research.unlocked_designs)
 		design = stored_research.unlocked_designs[design]

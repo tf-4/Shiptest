@@ -199,11 +199,11 @@ Nothing else in the console has ID requirements.
 		say("Node Interface Failure: unexpected response from database server!")
 		return FALSE
 
-	if(!(node in stored_research.nodes_can_research))
+	if(!stored_research.a_nodes_can_research[id])
 		say("Node Interface Failure: illegal node state inside database!")
 		return FALSE
 
-	node.create_grid(user, src)
+	node.create_grid(user, stored_research, src)
 	return FALSE
 
 /obj/machinery/computer/rdconsole/on_deconstruction()
@@ -568,8 +568,8 @@ Nothing else in the console has ID requirements.
 	l += "<A href='?src=[REF(src)];copy_tech=1'>Load Technology to Disk</A></div>"
 	l += "<div class='statusDisplay'><h3>Stored Technology Nodes:</h3>"
 	var/i = 1
-	for(var/datum/research_node/node as anything in t_disk.stored_research.nodes_researched)
-		node = t_disk.stored_research.nodes_researched[node]
+	for(var/datum/research_node/node as anything in t_disk.stored_research.a_nodes_researched)
+		node = t_disk.stored_research.node_by_id(node)
 		l += "<A href='?src=[REF(src)];view_node=[i];back_screen=[screen]'>[node.name]</A>"
 		i += 1
 	l += "</div>"
@@ -607,16 +607,17 @@ Nothing else in the console has ID requirements.
 	var/list/avail = list()			//This could probably be optimized a bit later.
 	var/list/unavail = list()
 	var/list/res = list()
-	for(var/v in stored_research.nodes_researched)
-		res += v
-	for(var/v in stored_research.nodes_can_research)
-		avail += v
-	for(var/v in stored_research.nodes_can_not_research)
-		unavail += v
+	for(var/v in stored_research.a_nodes_researched)
+		res += stored_research.node_by_id(v)
+	for(var/v in stored_research.a_nodes_can_research)
+		avail += stored_research.node_by_id(v)
+	for(var/v in stored_research.a_nodes_can_not_research)
+		unavail += stored_research.node_by_id(v)
 	l += "<h2>Technology Nodes:</h2>[RDSCREEN_NOBREAK]"
 	l += "<div><h3>Available for Research:</h3>"
 	for(var/datum/research_node/N in avail)
-		var/in_progress_text = length(N.grid?.users) ? "Resume" : "Start"
+		var/datum/research_grid/node_grid = N.get_web_grid(stored_research)
+		var/in_progress_text = length(node_grid?.users) ? "Resume" : "Start"
 		var/research_href = "<A href='?src=[REF(src)];research_node=[N.node_id]'>[in_progress_text] Research</A>"
 		l += "<A href='?src=[REF(src)];view_node=[N.node_id];back_screen=[screen]'>[N.name]</A>[research_href]"
 	l += "</div><div><h3>Locked Nodes:</h3>"
@@ -634,7 +635,7 @@ Nothing else in the console has ID requirements.
 
 /obj/machinery/computer/rdconsole/proc/ui_techweb_single_node(datum/research_node/node, selflink=TRUE, minimal=FALSE)
 	var/list/l = list()
-	if (node in stored_research.nodes_hidden)
+	if (stored_research.a_nodes_hidden[node.node_id])
 		return l
 	var/display_name = node.name
 	if (selflink)
@@ -643,11 +644,12 @@ Nothing else in the console has ID requirements.
 	if(minimal)
 		l += "<br>[node.description]"
 	else
-		if(node in stored_research.nodes_researched)
+		if(stored_research.a_nodes_researched[node.node_id])
 			l += "<span class='linkOff'>Researched</span>"
 		else
-			if(node in stored_research.nodes_can_research)
-				var/in_progress_text = length(node.grid?.users) ? "Resume" : "Start"
+			if(stored_research.a_nodes_can_research[node.node_id])
+				var/datum/research_grid/node_grid = node.get_web_grid(stored_research)
+				var/in_progress_text = length(node_grid?.users) ? "Resume" : "Start"
 				l += "<BR><A href='?src=[REF(src)];research_node=[node.node_id]'>[in_progress_text] Research</A>"
 			else
 				l += "<BR><span class='linkOff bad'>Start Research</span>"  // red - missing prereqs
@@ -663,7 +665,7 @@ Nothing else in the console has ID requirements.
 	var/datum/research_node/selected_node = stored_research.node_by_id(selected_node_id)
 	RDSCREEN_UI_SNODE_CHECK
 	var/list/l = list()
-	if(selected_node in stored_research.nodes_hidden)
+	if(stored_research.a_nodes_hidden[selected_node_id])
 		l += "<div><h3>ERROR: RESEARCH NODE UNKNOWN.</h3></div>"
 		return
 
@@ -922,7 +924,8 @@ Nothing else in the console has ID requirements.
 		if(QDELETED(t_disk))
 			say("No Technology Disk Inserted!")
 			return
-		t_disk.stored_research.nodes_researched = stored_research.nodes_researched.Copy()
+		t_disk.stored_research.a_nodes_researched = stored_research.a_nodes_researched.Copy()
+		t_disk.stored_research.a_nodes_not_researched = stored_research.a_nodes_not_researched.Copy()
 		screen = RDSCREEN_TECHDISK
 		say("Downloading to technology disk.")
 	if(ls["clear_design"]) //Erases la on the design disk.
@@ -951,10 +954,18 @@ Nothing else in the console has ID requirements.
 			say("No Technology Disk Inserted!")
 			return
 		say("Uploading technology disk.")
-		for(var/datum/research_node/node as anything in (t_disk.stored_research.nodes_researched & stored_research.nodes_not_researched))
-			if(node in stored_research.nodes_can_not_research)
-				continue
-			stored_research.handle_node_research_completion(node)
+		var/list/datum/research_node/left = t_disk.stored_research.a_nodes_researched.Copy()
+		var/last_len
+		while(length(left))
+			if(last_len == length(left))
+				break
+			last_len = length(left)
+
+			for(var/node in t_disk.stored_research.a_nodes_researched)
+				if(stored_research.a_nodes_can_research[node])
+					stored_research.handle_node_research_completion(stored_research.node_by_id(node))
+					left -= node
+
 	if(ls["copy_design"]) //Copy design from the research holder to the design disk.
 		if(QDELETED(d_disk))
 			say("No Design Disk Inserted!")

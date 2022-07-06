@@ -2707,6 +2707,7 @@
 #include "code\modules\ninja\suit\ninjaDrainAct.dm"
 #include "code\modules\ninja\suit\shoes.dm"
 #include "code\modules\ninja\suit\suit.dm"
+#include "code\modules\ninja\suit\suit_attackby.dm"
 #include "code\modules\ninja\suit\suit_initialisation.dm"
 #include "code\modules\ninja\suit\n_suit_verbs\energy_net_nets.dm"
 #include "code\modules\ninja\suit\n_suit_verbs\ninja_adrenaline.dm"

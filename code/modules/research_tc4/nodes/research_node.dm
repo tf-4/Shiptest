@@ -18,32 +18,39 @@
 
 	var/list/unlock_nodes = list()
 
-	// internal stuff
-	var/datum/research_web/parent
 	var/abstract = /datum/research_node
-	var/datum/research_grid/grid
+	var/list/grids
 
-/datum/research_node/New(parent)
-	src.parent = parent
+/datum/research_node/proc/get_grid_web(datum/research_grid/grid)
+	for(var/datum/research_web/web as anything in grids)
+		if(grids[web] == grid)
+			return web
 
-/datum/research_node/proc/handle_completion()
-	grid.completed = TRUE
-	parent.handle_node_research_completion(src)
+/datum/research_node/proc/get_web_grid(datum/research_web/web)
+	return grids[web]
+
+/datum/research_node/proc/do_completion(datum/research_grid/grid)
+	var/datum/research_web/parent_web = grids[grid]
+	parent_web.handle_node_research_completion(src)
 	grid.refresh()
 
-/datum/research_node/Destroy(force, ...)
-	. = ..()
-	parent.node_del(src)
-	parent = null
-	QDEL_NULL(grid)
+/datum/research_node/Destroy(force)
+	if(!force)
+		return QDEL_HINT_LETMELIVE
+	stack_trace("Destroying a research node, this should never ever fucking happen")
+	var/datum/research_web/any_web = grids[1]
+	any_web.all_nodes -= node_id
+	return ..()
 
-/datum/research_node/proc/handle_other_completion(datum/research_node/other_node)
+/datum/research_node/proc/handle_other_completion(datum/research_node/other_node, datum/research_web/containing_web)
 	return
 
-/datum/research_node/proc/create_grid(mob/user, obj/machinery/from)
+/datum/research_node/proc/create_grid(mob/user, datum/research_web/web, obj/machinery/from)
+	var/datum/research_grid/grid = grids[web]
 	if(!grid)
 		var/theory_total = length(theories_required)
 		var/expected_size = max((theory_total * 2) + 1, 5) // 1-2: 5x5, 3: 7x7, 4: 9x9, etc; might need a better formula for this because it will get large FAST
 		grid = new(src, expected_size, expected_size)
-	grid.add_user(user, from)
+		grids[web] = grid
+	grid.add_user(user, web, from)
 	return TRUE

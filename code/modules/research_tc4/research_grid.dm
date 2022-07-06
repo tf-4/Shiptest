@@ -20,9 +20,12 @@
 
 	var/selected_type
 
-/datum/research_grid/New(node, width = null, height = null)
+	var/datum/research_web/parent_web
+
+/datum/research_grid/New(node, parent_web, width = null, height = null)
 	. = ..()
 	src.node = node
+	src.parent_web = parent_web
 	name = "[initial(name)] ([src.node.name])"
 	users = list()
 	grid_width = width || grid_width
@@ -40,6 +43,7 @@
 /datum/research_grid/Destroy(force, ...)
 	. = ..()
 	node = null
+	parent_web = null
 	for(var/user in users)
 		user_logout(user)
 	users.Cut()
@@ -141,7 +145,7 @@
 
 	var/_type = __loc2type(__loc(x, y))
 	if(!discovered[x][y])
-		var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_DISCOVER)
+		var/can_afford = parent_web.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_DISCOVER)
 		if(!can_afford)
 			to_chat(usr, "<span class='warning'>Not enough research points to reveal tile!</span>")
 			return
@@ -155,7 +159,7 @@
 			selected_type = _type["theory"]
 			to_chat(usr, "<span class='notice'>Selected type is now: '[selected_type]'.</span>")
 		if("p")
-			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_COMPLETE)
+			var/can_afford = parent_web.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_COMPLETE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to attempt completion!</span>")
 				return
@@ -163,13 +167,13 @@
 				handle_completion()
 				return // handle completion refreshes for us
 		if("l")
-			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_LINE_REMOVE)
+			var/can_afford = parent_web.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_LINE_REMOVE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to remove line!</span>")
 				return
 			grid[x][y] = null
 		if("e")
-			var/can_afford = node.parent.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_LINE_CREATE)
+			var/can_afford = parent_web.use_points(node.node_cost_type, node.node_base_cost * GRID_COST_LINE_CREATE)
 			if(!can_afford)
 				to_chat(usr, "<span class='warning'>Not enough research points to create line!</span>")
 				return
@@ -183,7 +187,7 @@
 	for(var/mob/user as anything in users)
 		to_chat(user, "<span class='notice'>Research Grid finalized!</span>")
 	completed = TRUE
-	node.handle_completion()
+	node.do_completion(parent_web)
 	refresh()
 	for(var/mob/user as anything in users)
 		var/obj/machinery/user_src = users[user]
