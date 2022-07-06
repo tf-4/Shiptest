@@ -19,7 +19,7 @@
 	node_cost_type = RESEARCH_POINT_TYPE_ENGINEERING
 
 /datum/research_node/starter/basic_parts
-	name = "Integrated Defaults"
+	name = "Integrated"
 	description = "In accordance with the SolGov RDB all research servers have specific installed research that cannot be removed."
 	node_id = "basic_parts"
 	designs = list(

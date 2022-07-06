@@ -3,7 +3,7 @@
 	node_id = "engineering"
 	name = "Industrial Engineering"
 	description = "A refresher course on modern engineering technology."
-	requisite_nodes = list("basic_engineering")
+	requisite_nodes = list("basic_parts")
 	designs = list("solarcontrol", "solarassembly", "recharger", "powermonitor", "rped", "pacman", "adv_capacitor", "adv_scanning", "emitter", "high_cell", "adv_matter_bin", "scanner_gate",
 	"atmosalerts", "atmos_control", "recycler", "autolathe", "high_micro_laser", "nano_mani", "mesons", "welding_goggles", "thermomachine", "rad_collector", "tesla_coil", "grounding_rod",
 	"apc_control", "cell_charger", "power control", "airlock_board", "firelock_board", "aac_electronics", "airalarm_electronics", "firealarm_electronics", "cell_charger", "stack_console", "stack_machine",
@@ -114,7 +114,7 @@
 	node_id = "robotics"
 	name = "Basic Robotics Research"
 	description = "Programmable machines that make our lives lazier."
-	requisite_nodes = list("basic")
+	requisite_nodes = list("basic_parts")
 	designs = list("paicard")
 
 /datum/research_node/adv_robotics

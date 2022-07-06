@@ -8,7 +8,7 @@
 	var/node_experimental = FALSE
 	var/node_cost_type = RESEARCH_POINT_TYPE_ENGINEERING
 	var/node_base_cost = 50
-	var/list/designs
+	var/list/designs = list()
 
 	var/list/theories_required = list(
 		"default" = 2
@@ -19,7 +19,7 @@
 	var/list/unlock_nodes = list()
 
 	var/abstract = /datum/research_node
-	var/list/grids
+	var/list/grids = list()
 
 /datum/research_node/proc/get_grid_web(datum/research_grid/grid)
 	for(var/datum/research_web/web as anything in grids)
