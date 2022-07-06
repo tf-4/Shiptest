@@ -160,18 +160,16 @@
 	)
 	node_cost_type = RESEARCH_POINT_TYPE_SCIENCE
 
-/datum/research_node/cyborg
+/datum/research_node/start/cyborg
 	node_id = "cyborg"
-	starting_node = TRUE
 	name = "Cyborg Construction"
 	description = "Sapient robots with preloaded tool modules and programmable laws."
 	designs = list("robocontrol", "sflash", "borg_suit", "borg_head", "borg_chest", "borg_r_arm", "borg_l_arm", "borg_r_leg", "borg_l_leg", "borgupload",
 					"cyborgrecharger", "borg_upgrade_restart", "borg_upgrade_rename", "augmanipulator")
 	node_cost_type = RESEARCH_POINT_TYPE_SCIENCE
 
-/datum/research_node/mech
+/datum/research_node/starter/mech
 	node_id = "mecha"
-	starting_node = TRUE
 	name = "Mechanical Exosuits"
 	description = "Mechanized exosuits that are several magnitudes stronger and more powerful than the average human."
 	designs = list(

@@ -2,7 +2,7 @@
 	node_id = "datatheory"
 	name = "Data Theory"
 	description = "Big Data, in space!"
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_parts")
 	designs = list(
 		"survey-handheld-advanced",
 		"design_disk_adv",

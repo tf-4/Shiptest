@@ -2,7 +2,7 @@
 	node_id = "biotech"
 	name = "Biological Technology"
 	description = "What makes us tick."	//the MC, silly!
-	requisite_nodes = list("base")
+	requisite_nodes = list("basic_medical")
 	designs = list(
 		"sleeper",
 		"chem_heater",
