@@ -150,6 +150,8 @@
 		var/datum/research_node/node = linked_techweb.node_by_id(pick(linked_techweb.a_nodes_bepis))
 		linked_techweb.handle_node_research_completion(node)
 		say("Experiment concluded with major success. New technology node '[node.name]' discovered and uploaded.")
+		if(!length(linked_techweb.a_nodes_bepis))
+			say("WARNING: No more experimental nodes detected, reverting to minor rewards.")
 		return
 	if(gauss_real >= gauss_minor) //Minor Success.
 		var/reward = pick(minor_rewards)

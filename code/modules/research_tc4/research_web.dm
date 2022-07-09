@@ -136,11 +136,14 @@
 
 	for(var/datum/research_node/not_researched as anything in a_nodes_not_researched)
 		not_researched = a_nodes_not_researched[not_researched]
+		var/skip = FALSE
 		if(not_researched.node_hidden)
 			a_nodes_hidden[not_researched.node_id] = not_researched
-			continue
+			skip = TRUE
 		if(not_researched.node_experimental)
 			a_nodes_bepis[not_researched.node_id] = not_researched
+			skip = TRUE
+		if(skip)
 			continue
 
 		var/req = not_researched.requisite_nodes.Copy()
