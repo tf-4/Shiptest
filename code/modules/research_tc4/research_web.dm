@@ -6,6 +6,7 @@
 	var/list/datum/research_node/a_nodes_can_research
 	var/list/datum/research_node/a_nodes_hidden
 	var/list/datum/research_node/a_nodes_can_not_research
+	var/list/datum/research_node/a_nodes_bepis
 
 	// these are here to prevent machinery from having to iterate through the internal node lists
 	var/static/list/all_nodes
@@ -68,6 +69,7 @@
 	a_nodes_can_research = new
 	a_nodes_can_not_research = new
 	a_nodes_hidden = new
+	a_nodes_bepis = new
 	unlocked_designs = new
 	unlocked_mutations = new
 	consoles_accessing = new
@@ -81,6 +83,7 @@
 	a_nodes_not_researched.Cut()
 	a_nodes_can_research.Cut()
 	a_nodes_can_not_research.Cut()
+	a_nodes_bepis.Cut()
 	unlocked_designs.Cut()
 	slime_already_researched.Cut()
 	consoles_accessing.Cut()
@@ -93,6 +96,7 @@
 	a_nodes_not_researched.Cut()
 	a_nodes_can_research.Cut()
 	a_nodes_can_not_research.Cut()
+	a_nodes_bepis.Cut()
 
 	for(var/datum/research_node/node as anything in all_nodes)
 		node = all_nodes[node]
@@ -124,6 +128,8 @@
 
 	a_nodes_can_research.Cut()
 	a_nodes_can_not_research.Cut()
+	a_nodes_hidden.Cut()
+	a_nodes_bepis.Cut()
 
 	for(var/datum/research_node/researched as anything in a_nodes_researched)
 		a_nodes_can_not_research[researched] = a_nodes_researched[researched]
@@ -132,6 +138,9 @@
 		not_researched = a_nodes_not_researched[not_researched]
 		if(not_researched.node_hidden)
 			a_nodes_hidden[not_researched.node_id] = not_researched
+			continue
+		if(not_researched.node_experimental)
+			a_nodes_bepis[not_researched.node_id] = not_researched
 			continue
 
 		var/req = not_researched.requisite_nodes.Copy()
@@ -156,8 +165,17 @@
 /datum/research_web/proc/node_by_id(id)
 	return all_nodes[id] || stack_trace("Attempted to get a non-existant node")
 
-/datum/research_web/proc/add_points_from_note(obj/item/research_notes/note)
-	return //TODO
+/datum/research_web/proc/add_points_from_note(obj/item/research_notes/note, mob/user)
+	var/redeemed = add_points(note.point_type, note.value)
+	if(redeemed < note.value)
+		if(user)
+			to_chat(user, "<span class='notice'>You scan some of the contents of [note] into the database, but not all of it could be uploaded!</span>")
+		note.value -= redeemed
+		return
+	
+	if(user)
+		to_chat(user, "<span class='notice'>You scan [note] into the database.</span>")
+	qdel(note)
 
 /datum/research_web/proc/create_point_information_header()
 	var/list/dat = list("<div id='rnd-points'>")

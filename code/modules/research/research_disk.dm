@@ -43,18 +43,22 @@
 	var/origin_type = "debug"
 	///if it ws merged with different origins to apply a bonus
 	var/mixed = FALSE
+	/// point type of this note
+	var/point_type
 
-/obj/item/research_notes/Initialize(mapload, _value, _origin_type)
+/obj/item/research_notes/Initialize(mapload, _value, _origin_type, point_type)
 	. = ..()
 	if(_value)
 		value = _value
 	if(_origin_type)
 		origin_type = _origin_type
+	if(point_type)
+		src.point_type = point_type
 	change_vol()
 
 /obj/item/research_notes/examine(mob/user)
 	. = ..()
-	. += "<span class='notice'>It is worth [value] research points.</span>"
+	. += "<span class='notice'>It is worth [value] research points for the field of [point_type].</span>"
 
 /// proc that changes name and icon depending on value
 /obj/item/research_notes/proc/change_vol()
@@ -77,6 +81,9 @@
 
 ///proc when you slap research notes into another one, it applies a bonus if they are of different origin (only applied once)
 /obj/item/research_notes/proc/merge(obj/item/research_notes/new_paper)
+	if(new_paper.point_type != point_type)
+		to_chat(usr, "<span class='notice'>[src] and [new_paper] are about different topics! It wouldn't make sense to combine them.</span>")
+		return
 	var/bonus = min(value , new_paper.value)
 	value = value + new_paper.value
 	if(origin_type != new_paper.origin_type && !mixed)

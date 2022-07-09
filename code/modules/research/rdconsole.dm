@@ -122,7 +122,6 @@ Nothing else in the console has ID requirements.
 
 		stored_research.add_points_from_note(D)
 		playsound(src,'sound/machines/copier.ogg', 50, TRUE)
-		qdel(D)
 		return TRUE
 
 	if(istype(D, /obj/item/multitool))
