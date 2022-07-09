@@ -184,15 +184,6 @@ Nothing else in the console has ID requirements.
 		if (d_disk)
 			. += "<span class='notice'>[d_disk.name] is loaded, Alt-Click to remove.</span>"
 
-/client/verb/debug_rnd()
-	var/turf/t = get_turf(mob)
-	var/obj/machinery/research_server/serv = new(t)
-	for(var/pt in RESEARCH_POINT_TYPE_ALL)
-		serv.web.add_points(pt, 50000, TRUE)
-	var/obj/machinery/computer/rdconsole/comp = new(t)
-	comp.stored_research = serv.web
-	comp.ui_interact(mob)
-
 /obj/machinery/computer/rdconsole/proc/research_node(id, mob/user)
 	var/datum/research_node/node = stored_research.node_by_id(id)
 	if(!node)

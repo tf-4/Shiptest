@@ -2,6 +2,13 @@
 #define GRID_SOCK(_type) "g_[_type]_s"
 #define GRID_LINE(_type) "g_[_type]_l"
 
+/mob
+	var/datum/research_grid/current_grid
+
+/mob/Destroy(force, ...)
+	current_grid?.user_logout(src)
+	. = ..()
+
 /datum/research_grid
 	var/name = "Research Grid"
 	var/datum/research_node/node
@@ -52,6 +59,10 @@
 	if(QDELETED(src))
 		return
 
+	if(user.current_grid && user.current_grid != src)
+		user.current_grid.user_logout(user)
+	user.current_grid = src
+
 	if(!(user in users))
 		RegisterSignal(user, COMSIG_MOB_CLIENT_LOGIN, .proc/user_login)
 		RegisterSignal(user, COMSIG_MOB_LOGOUT, .proc/user_logout)
@@ -92,11 +103,18 @@
 /datum/research_grid/proc/user_logout(mob/target)
 	SIGNAL_HANDLER
 
+	if(target.current_grid != src)
+		CRASH("[target] being logged out of [src] when we aren't their active grid!")
+
+	target.current_grid = null
 	users -= target
 	target << browse(null, "window=rgrid")
 	UnregisterSignal(target, list(COMSIG_MOB_CLIENT_LOGIN, COMSIG_MOB_LOGOUT))
 
 /datum/research_grid/proc/__get_icon(state)
+	var/static/list/valid_states = icon_states('grid_items.dmi')
+	if(!(state in valid_states))
+		CRASH("Attempt to get an invalid grid state")
 	return icon('grid_items.dmi', state)
 
 /datum/research_grid/proc/get_button_contents(x, y)
@@ -114,7 +132,7 @@
 		if("p")
 			overlay = __get_icon("plug")
 		if("l")
-			overlay = __get_icon("line")
+			return get_line_html(x, y)
 		if("e")
 			overlay = __get_icon("empty")
 		else
@@ -134,6 +152,49 @@
 	base.Blend(overlay, ICON_OVERLAY)
 
 	return icon2html(base, usr)
+
+/client/verb/rnd_debug()
+	mob.CtrlShiftClick(mob)
+	spawn(5)
+		var/turf/t = get_turf(mob)
+		var/obj/machinery/research_server/serv = new(t)
+		for(var/pt in RESEARCH_POINT_TYPE_ALL)
+			serv.web.add_points(pt, 50000, TRUE)
+		var/obj/machinery/computer/rdconsole/comp = new(t)
+		comp.stored_research = serv.web
+		comp.research_node("biotech", mob)
+
+/datum/research_grid/proc/get_line_html(x, y)
+	var/state = "line-"
+	for(var/dir in GLOB.cardinals)
+		var/tx = x
+		var/ty = y
+		var/ta
+		switch(dir)
+			if(NORTH)
+				ty -= 1
+				ta = "n"
+			if(SOUTH)
+				ty += 1
+				ta = "s"
+			if(EAST)
+				tx += 1
+				ta = "e"
+			if(WEST)
+				tx -= 1
+				ta = "w"
+		if(tx < 1 || tx > grid_width || ty < 1 || ty > grid_height)
+			continue
+		if(can_connect(x, y, tx, ty))
+			state = "[state][ta]"
+	
+	return icon2html(__get_icon(state), usr)
+
+/datum/research_grid/proc/can_connect(x, y, tx, ty)
+	var/_type1 = __loc2type(__loc(x, y))
+	var/_type2 = __loc2type(__loc(tx, ty))
+
+	return _type1["theory"] == _type2["theory"]
 
 /datum/research_grid/proc/handle_button(x, y)
 	if(istext(x))
@@ -187,7 +248,7 @@
 	for(var/mob/user as anything in users)
 		to_chat(user, "<span class='notice'>Research Grid finalized!</span>")
 	completed = TRUE
-	node.do_completion(parent_web)
+	node.do_completion(src)
 	refresh()
 	for(var/mob/user as anything in users)
 		var/obj/machinery/user_src = users[user]
@@ -216,7 +277,7 @@
 			for(var/idx in 1 to t_needed)
 				var/t_x
 				var/t_y
-				var/tries = 0
+				var/tries = 0 
 				do
 					tries += 1
 					if(tries > 5)

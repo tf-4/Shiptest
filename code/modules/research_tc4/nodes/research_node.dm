@@ -30,7 +30,7 @@
 	return grids[web]
 
 /datum/research_node/proc/do_completion(datum/research_grid/grid)
-	var/datum/research_web/parent_web = grids[grid]
+	var/datum/research_web/parent_web = get_grid_web(grid)
 	parent_web.handle_node_research_completion(src)
 	grid.refresh()
 
@@ -50,7 +50,7 @@
 	if(!grid)
 		var/theory_total = length(theories_required)
 		var/expected_size = max((theory_total * 2) + 1, 5) // 1-2: 5x5, 3: 7x7, 4: 9x9, etc; might need a better formula for this because it will get large FAST
-		grid = new(src, expected_size, expected_size)
+		grid = new(src, web, expected_size)
 		grids[web] = grid
-	grid.add_user(user, web, from)
+	grid.add_user(user, from)
 	return TRUE
