@@ -7,7 +7,26 @@
 
 /mob/Destroy(force, ...)
 	current_grid?.user_logout(src)
+	return ..()
+
+/mob/Login()
 	. = ..()
+	current_grid?.user_login(src)
+
+/proc/__loc_step(list/loc, dir)
+	switch(dir)
+		if(NORTH)
+			return __loc(loc["x"], loc["y"] - 1)
+		if(SOUTH)
+			return __loc(loc["x"], loc["y"] + 1)
+		if(EAST)
+			return __loc(loc["x"] + 1, loc["y"])
+		if(WEST)
+			return __loc(loc["x"] - 1, loc["y"])
+	CRASH("illegal loc step")
+
+/proc/__loc(x, y)
+	return list("x" = x, "y" = y)
 
 /datum/research_grid
 	var/name = "Research Grid"
@@ -48,12 +67,12 @@
 			addtimer(CALLBACK(.proc/qdel_self), 0)
 
 /datum/research_grid/Destroy(force, ...)
-	. = ..()
 	node = null
 	parent_web = null
 	for(var/user in users)
 		user_logout(user)
 	users.Cut()
+	return ..()
 
 /datum/research_grid/proc/add_user(mob/user, obj/machinery/from)
 	if(QDELETED(src))
@@ -62,15 +81,9 @@
 	if(user.current_grid && user.current_grid != src)
 		user.current_grid.user_logout(user)
 	user.current_grid = src
-
-	if(!(user in users))
-		RegisterSignal(user, COMSIG_MOB_CLIENT_LOGIN, .proc/user_login)
-		RegisterSignal(user, COMSIG_MOB_LOGOUT, .proc/user_logout)
 	user_refresh(user, from)
 
 /datum/research_grid/proc/user_login(mob/target)
-	SIGNAL_HANDLER
-
 	INVOKE_ASYNC(src, .proc/user_refresh, target)
 
 /datum/research_grid/proc/refresh()
@@ -101,15 +114,9 @@
 	popup.open()
 
 /datum/research_grid/proc/user_logout(mob/target)
-	SIGNAL_HANDLER
-
-	if(target.current_grid != src)
-		CRASH("[target] being logged out of [src] when we aren't their active grid!")
-
 	target.current_grid = null
 	users -= target
 	target << browse(null, "window=rgrid")
-	UnregisterSignal(target, list(COMSIG_MOB_CLIENT_LOGIN, COMSIG_MOB_LOGOUT))
 
 /datum/research_grid/proc/__get_icon(state)
 	var/static/list/valid_states = icon_states('grid_items.dmi')
@@ -187,7 +194,7 @@
 			continue
 		if(can_connect(x, y, tx, ty))
 			state = "[state][ta]"
-	
+
 	return icon2html(__get_icon(state), usr)
 
 /datum/research_grid/proc/can_connect(x, y, tx, ty)
@@ -277,7 +284,7 @@
 			for(var/idx in 1 to t_needed)
 				var/t_x
 				var/t_y
-				var/tries = 0 
+				var/tries = 0
 				do
 					tries += 1
 					if(tries > 5)
@@ -305,9 +312,6 @@
 		.[x] = new /list(grid_height)
 		for(var/y in 1 to grid_height)
 			.[x][y] = FALSE
-
-/datum/research_grid/proc/__loc(x, y)
-	return list("x" = x, "y" = y)
 
 /datum/research_grid/proc/__loc2text(list/loc)
 	return "[loc["x"]];[loc["y"]]"

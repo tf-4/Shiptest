@@ -19,7 +19,7 @@ Nothing else in the console has ID requirements.
 	desc = "A console used to interface with R&D tools."
 	icon_screen = "rdcomp"
 	icon_keyboard = "rd_key"
-	var/datum/research_web/stored_research					//Reference to global science techweb.
+	var/datum/research_web/stored_research
 	var/obj/item/disk/tech_disk/t_disk	//Stores the technology disk.
 	var/obj/item/disk/design_disk/d_disk	//Stores the design disk.
 	circuit = /obj/item/circuitboard/computer/rdconsole
@@ -46,8 +46,6 @@ Nothing else in the console has ID requirements.
 	var/ui_mode = RDCONSOLE_UI_MODE_NORMAL
 
 	var/research_control = TRUE
-	var/list/slime_already_researched = list()
-	var/list/plant_already_researched = list()
 
 /obj/machinery/computer/rdconsole/production
 	circuit = /obj/item/circuitboard/computer/rdconsole/production
@@ -118,6 +116,11 @@ Nothing else in the console has ID requirements.
 
 /obj/machinery/computer/rdconsole/attackby(obj/item/D, mob/user, params)
 	if(istype(D, /obj/item/slime_extract))
+		if(!istype(stored_research))
+			say("Unable to connect to database!")
+			return TRUE
+
+		var/list/slime_already_researched = stored_research.slime_already_researched
 		var/obj/item/slime_extract/E = D
 		if(!slime_already_researched[E.type])
 			if(!E.research)
@@ -131,7 +134,7 @@ Nothing else in the console has ID requirements.
 			else
 				playsound(src, 'sound/machines/ping.ogg', 50, 3, -1)
 				visible_message("<span class='notice'>You insert [E] into a slot on the [src], producting [E.research] points from the extract's chemical makeup!</span>")
-				stored_research.add_point_list(list(TECHWEB_POINT_TYPE_GENERIC = E.research))
+				stored_research.add_points(RESEARCH_POINT_TYPE_SCIENCE, E.research, TRUE) // we force point insertion because we don't want to waste the item
 				slime_already_researched[E.type] = TRUE
 				qdel(D)
 				return
@@ -141,6 +144,11 @@ Nothing else in the console has ID requirements.
 			return
 
 	if(istype(D, /obj/item/seeds))
+		if(!istype(stored_research))
+			say("Unable to connect to database!")
+			return TRUE
+
+		var/list/plant_already_researched = stored_research.plant_already_researched
 		var/obj/item/seeds/E = D
 		if(!plant_already_researched[E.type])
 			if(!E.research)
@@ -150,7 +158,7 @@ Nothing else in the console has ID requirements.
 			else
 				playsound(src, 'sound/machines/ping.ogg', 50, 3, -1)
 				visible_message("<span class='notice'>You insert [E] into a slot on the [src], producting [E.research] points from the plant's genetic makeup!</span>")
-				stored_research.add_point_list(list(TECHWEB_POINT_TYPE_GENERIC = E.research))
+				stored_research.add_points(RESEARCH_POINT_TYPE_SERVICE, E.research, TRUE) // we force point insertion because we don't want to waste the item
 				plant_already_researched[E.type] = TRUE
 				qdel(D)
 				return

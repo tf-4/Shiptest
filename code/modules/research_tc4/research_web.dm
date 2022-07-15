@@ -16,6 +16,7 @@
 	var/list/datum/surgery/unlocked_designs
 	var/list/datum/mutation/unlocked_mutations
 	var/list/slime_already_researched
+	var/list/plant_already_researched
 
 	var/largest_bomb_value
 	var/old_tech_largest_bomb_value
@@ -62,6 +63,7 @@
 		calculate_node_unlocks()
 	src.parent = parent
 	slime_already_researched = new
+	plant_already_researched = new
 	points = new
 	ruin = ruin || (("is_ruin" in parent.vars) ? parent:is_ruin : FALSE) // unsafe var access, but we check for the var existing first
 	a_nodes_researched = new
@@ -86,6 +88,7 @@
 	a_nodes_bepis.Cut()
 	unlocked_designs.Cut()
 	slime_already_researched.Cut()
+	plant_already_researched.Cut()
 	consoles_accessing.Cut()
 	QDEL_LIST(points)
 	parent = null
@@ -153,7 +156,7 @@
 		if(length(req))
 			a_nodes_can_not_research[not_researched.node_id] = not_researched
 			continue
-		
+
 		var/exclusive = FALSE
 		for(var/excl in not_researched.exclusive_nodes)
 			if(a_nodes_researched[excl])
@@ -162,7 +165,7 @@
 				break
 		if(exclusive)
 			continue
-		
+
 		a_nodes_can_research[not_researched.node_id] = not_researched
 
 /datum/research_web/proc/node_by_id(id)
@@ -175,7 +178,7 @@
 			to_chat(user, "<span class='notice'>You scan some of the contents of [note] into the database, but not all of it could be uploaded!</span>")
 		note.value -= redeemed
 		return
-	
+
 	if(user)
 		to_chat(user, "<span class='notice'>You scan [note] into the database.</span>")
 	qdel(note)
@@ -232,7 +235,7 @@
 		if(other == researched)
 			continue
 		other.handle_other_completion(researched, src)
-	
+
 	calculate_node_requisites()
 
 	for(var/obj/machinery/console as anything in consoles_accessing)
