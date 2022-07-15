@@ -133,7 +133,7 @@
 		flick("rpcoilhit", src)
 		var/datum/bank_account/D = SSeconomy.get_dep_account(ACCOUNT_ENG)
 		if(D)
-			D.adjust_money(min(power_produced, 3))
+			D.adjust_money(min(power_produced, 12))
 		if(istype(linked_techweb))
 			linked_techweb.add_points(RESEARCH_POINT_TYPE_ENGINEERING, min(power_produced, 3)) // x4 coils with a pulse per second or so = ~720/m point bonus for R&D
 		addtimer(CALLBACK(src, .proc/reset_shocked), 10)
