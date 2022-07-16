@@ -114,6 +114,18 @@ Nothing else in the console has ID requirements.
 	matching_design_ids = null
 	return ..()
 
+/obj/machinery/computer/rdconsole/multitool_act(mob/user, obj/item/multitool/multi)
+	if(istype(stored_research))
+		stored_research.consoles_accessing -= src
+		stored_research = null
+		say("Disconnected from existing server.")
+		return TRUE
+
+	stored_research = multi.buffer
+	stored_research.consoles_accessing += src
+	say("Connected to new server.")
+	return TRUE
+
 /obj/machinery/computer/rdconsole/attackby(obj/item/D, mob/user, params)
 	if(istype(D, /obj/item/slime_extract))
 		if(!istype(stored_research))
@@ -175,19 +187,6 @@ Nothing else in the console has ID requirements.
 		stored_research.add_points_from_note(D)
 		playsound(src,'sound/machines/copier.ogg', 50, TRUE)
 		return TRUE
-
-	if(istype(D, /obj/item/multitool))
-		var/obj/item/multitool/multi = D
-
-		if(istype(multi.buffer, /datum/research_web))
-			visible_message("Connected to Server.")
-			stored_research = multi.buffer
-			return
-
-		if(stored_research)
-			visible_message("Disconnected from Server.")
-			disconnect_from_server()
-			return
 
 	//Loading a disk into it.
 	if(istype(D, /obj/item/disk))
@@ -267,12 +266,6 @@ Nothing else in the console has ID requirements.
 		obj_flags |= EMAGGED
 		locked = FALSE
 	return ..()
-
-/obj/machinery/computer/rdconsole/multitool_act(mob/user, obj/item/multitool/I)
-	. = ..()
-	var/lathe = linked_lathe && linked_lathe.multitool_act(user, I)
-	var/print = linked_imprinter && linked_imprinter.multitool_act(user, I)
-	return lathe || print || .
 
 /obj/machinery/computer/rdconsole/proc/list_categories(list/categories, menu_num as num)
 	if(!categories)
@@ -659,7 +652,7 @@ Nothing else in the console has ID requirements.
 	l += "<div><h3>Available for Research:</h3>"
 	for(var/datum/research_node/N in avail)
 		var/datum/research_grid/node_grid = N.get_web_grid(stored_research)
-		var/in_progress_text = length(node_grid?.users) ? "Resume" : "Start"
+		var/in_progress_text = node_grid ? "Resume" : "Start"
 		var/research_href = "<A href='?src=[REF(src)];research_node=[N.node_id]'>[in_progress_text] Research</A>"
 		l += "<A href='?src=[REF(src)];view_node=[N.node_id];back_screen=[screen]'>[N.name]</A>[research_href]"
 	l += "</div><div><h3>Locked Nodes:</h3>"
@@ -691,7 +684,7 @@ Nothing else in the console has ID requirements.
 		else
 			if(stored_research.a_nodes_can_research[node.node_id])
 				var/datum/research_grid/node_grid = node.get_web_grid(stored_research)
-				var/in_progress_text = length(node_grid?.users) ? "Resume" : "Start"
+				var/in_progress_text = node_grid ? "Resume" : "Start"
 				l += "<BR><A href='?src=[REF(src)];research_node=[node.node_id]'>[in_progress_text] Research</A>"
 			else
 				l += "<BR><span class='linkOff bad'>Start Research</span>"  // red - missing prereqs

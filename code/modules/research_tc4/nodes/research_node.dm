@@ -32,7 +32,7 @@
 /datum/research_node/proc/do_completion(datum/research_grid/grid)
 	var/datum/research_web/parent_web = get_grid_web(grid)
 	parent_web.handle_node_research_completion(src)
-	grid.refresh()
+	SStgui.update_uis(grid)
 
 /datum/research_node/Destroy(force)
 	if(!force)
