@@ -301,13 +301,14 @@
 	if(obj_flags & EMAGGED)
 		return
 	for(var/design_id in stored_research.all_designs)
+		if(design_id in stored_research.unlocked_designs)
+			continue
 		var/datum/design/found_design = stored_research.all_designs[design_id]
 		if((found_design.build_type & LIMBGROWER) && ("emagged" in found_design.category))
-			stored_research.add_design(found_design)
+			stored_research.unlocked_designs[design_id] = found_design
 	to_chat(user, "<span class='warning'>Safety overrides have been deactivated!</span>")
 	obj_flags |= EMAGGED
 	update_static_data(user)
-
 
 //start yog
 /obj/machinery/limbgrower/proc/handle_biomass(user_item, biomass, user) // updates the value
