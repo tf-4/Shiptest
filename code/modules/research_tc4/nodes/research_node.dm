@@ -8,6 +8,8 @@
 	var/node_experimental = FALSE
 	var/node_cost_type = RESEARCH_POINT_TYPE_ENGINEERING
 	var/node_base_cost = 50
+	/// list of items that can be used to boost this node into no longer being hidden
+	var/list/node_boost_items = list()
 	var/list/designs = list()
 
 	var/list/theories_required = list(
@@ -16,9 +18,11 @@
 	var/list/requisite_nodes = list()
 	var/list/exclusive_nodes = list()
 
+	/// internal use only, do not set this to anything
 	var/list/unlock_nodes = list()
-
+	/// abstract type of this node
 	var/abstract = /datum/research_node
+	/// internal storage for grids indexed by web owner
 	var/list/grids = list()
 
 /datum/research_node/proc/get_grid_web(datum/research_grid/grid)
