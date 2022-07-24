@@ -7,6 +7,7 @@
 	var/node_hidden = FALSE
 	var/node_experimental = FALSE
 	var/node_cost_type = RESEARCH_POINT_TYPE_ENGINEERING
+	var/node_cost_final = 500
 	var/node_base_cost = 50
 	/// list of items that can be used to boost this node into no longer being hidden
 	var/list/node_boost_items = list()
@@ -38,13 +39,10 @@
 	parent_web.handle_node_research_completion(src)
 	SStgui.update_uis(grid)
 
-/datum/research_node/Destroy(force)
-	if(!force)
-		return QDEL_HINT_LETMELIVE
-	stack_trace("Destroying a research node, this should never ever fucking happen")
-	var/datum/research_web/any_web = grids[1]
-	any_web.all_nodes -= node_id
-	return ..()
+/datum/research_node/Del()
+	stack_trace("Some idiot just tried to qdel me! [type]")
+	// no
+	return
 
 /datum/research_node/proc/handle_other_completion(datum/research_node/other_node, datum/research_web/containing_web)
 	return

@@ -10,6 +10,7 @@
 	var/obj/item/multitool/mult = new(turf)
 	mob.put_in_active_hand(mult, TRUE, TRUE)
 	mob.ClickOn(serv)
+	mob.next_click = 0
 	mob.ClickOn(rdc)
 	qdel(mult)
 	rdc.ui_interact(mob)
@@ -186,8 +187,13 @@
 	var/datum/research_web/web
 	var/grid_size
 
+	var/selected_type
+	var/completed = FALSE
+
 	/// The entirety of the grid in one convienent var
 	var/list/datum/grid_tile/grid
+	/// Grid items which are uncovered. list in the format [x]x[y]
+	var/list/grid_uncovered
 	/// Assosciative list of plug -> socket
 	var/list/datum/grid_tile/plug_map
 
@@ -197,6 +203,7 @@
 	src.node = node
 	src.web = web
 	src.grid_size = grid_size
+	grid_uncovered = new
 	users = new
 	init_grid()
 
@@ -272,6 +279,8 @@
 
 /datum/research_grid/ui_close(mob/user)
 	. = ..()
+	if(user.active_grid != src) // already closed
+		return
 	remove_user(user)
 
 /datum/research_grid/proc/add_user(mob/user)
@@ -296,9 +305,47 @@
 			return UI_INTERACTIVE
 	return UI_DISABLED
 
+/datum/research_grid/ui_static_data(mob/user)
+	. = list()
+	.["node_name"] = node.name
+	.["cost_base"] = node.node_base_cost
+	.["cost_finish"] = node.node_cost_final
+	.["node_cost_type"] = node.node_cost_type
+	.["web_points_current"] = web.points[node.node_cost_type]
+	.["types_list"] = list()
+	for(var/type in node.theories_required)
+		.["types_list"] |= type
+		.["types_total"] += 1
+
+/datum/research_grid/ui_data(mob/user)
+	. = list()
+	.["selected_type"] = selected_type || ""
+	.["completed"] = completed
+	.["grid_hidden"] = grid_uncovered
+
 /datum/research_grid/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
 		ui = new(user, src, "ResearchGridUI")
 		ui.open()
 		ui.set_autoupdate(TRUE)
+
+/datum/research_grid/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+	. = ..()
+	if(.)
+		return
+
+	var/loc = list(
+		"x" = params["grid_x"],
+		"y" = params["grid_y"],
+	)
+	var/loc_str = "[loc["x"]]x[loc["y"]]"
+
+	switch(action)
+		if("uncover")
+			if(loc_str in grid_uncovered)
+				return
+			if(!web.use_points(node.node_cost_type, node.node_base_cost))
+				return
+			grid_uncovered += loc_str
+

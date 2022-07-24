@@ -213,6 +213,24 @@
 	var/datum/theory_holder/holder = points[_type]
 	return holder.add_points(amount, force)
 
+/datum/research_web/proc/get_points(_type)
+	if(ruin || admin)
+		return
+
+	if(!(_type in points))
+		return 0
+	var/datum/theory_holder/holder = points[_type]
+	return holder.points
+
+/datum/research_web/proc/get_points_max(_type)
+	if(ruin || admin)
+		return
+
+	if(!(_type in points))
+		return 0
+	var/datum/theory_holder/holder = points[_type]
+	return holder.points_max
+
 /datum/research_web/proc/recalculate_unlocked_designs()
 	unlocked_designs.Cut()
 	for(var/datum/research_node/node as anything in a_nodes_researched)
